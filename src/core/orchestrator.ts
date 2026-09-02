@@ -117,6 +117,12 @@ export class Orchestrator {
       const previousResult = await this.deps.store.loadWorkerResult(previousRunId);
       const previousReview = await this.deps.store.loadReview(previousRunId);
       if (!previousResult || !previousReview) return await this.block(next, "REVISION_CONTEXT_MISSING");
+
+      const resultIdentity = this.workerResultIdentityError(task, previousRunId, previousResult);
+      if (resultIdentity) return await this.block(next, "WORKER_RESULT_INVALID", resultIdentity);
+      const reviewIdentity = this.reviewIdentityError(task, previousRunId, previousReview);
+      if (reviewIdentity) return await this.block(next, "SUPERVISOR_RESPONSE_INVALID", reviewIdentity);
+
       prompt = compileRevisionPrompt(task, currentRunId, previousResult, previousReview);
     } else {
       prompt = compileWorkerPrompt(task, currentRunId);
@@ -155,6 +161,9 @@ export class Orchestrator {
       };
     }
 
+    const identityError = this.workerResultIdentityError(task, runId, result);
+    if (identityError) return await this.block(running, "WORKER_RESULT_INVALID", identityError);
+
     await this.deps.store.saveWorkerResult(runId, result);
     await this.event(running, "result.persisted", { status: result.status });
 
@@ -181,6 +190,9 @@ export class Orchestrator {
     const result = await this.deps.store.loadWorkerResult(runId);
     if (!result) return await this.block(record, "WORKER_RESULT_MISSING");
 
+    const resultIdentity = this.workerResultIdentityError(task, runId, result);
+    if (resultIdentity) return await this.block(record, "WORKER_RESULT_INVALID", resultIdentity);
+
     let review = await this.deps.store.loadReview(runId);
     if (!review) {
       const previousReview = record.previousRunId ? await this.deps.store.loadReview(record.previousRunId) : undefined;
@@ -193,14 +205,8 @@ export class Orchestrator {
       }
     }
 
-    if (review.taskId !== task.taskId || review.runId !== runId) {
-      return await this.block(record, "SUPERVISOR_RESPONSE_INVALID", {
-        expectedTaskId: task.taskId,
-        receivedTaskId: review.taskId,
-        expectedRunId: runId,
-        receivedRunId: review.runId
-      });
-    }
+    const reviewIdentity = this.reviewIdentityError(task, runId, review);
+    if (reviewIdentity) return await this.block(record, "SUPERVISOR_RESPONSE_INVALID", reviewIdentity);
 
     if (!(await this.deps.store.loadReview(runId))) {
       await this.deps.store.saveReview(runId, review);
@@ -239,6 +245,9 @@ export class Orchestrator {
     if (!runId) return await this.block(record, "RUN_ID_MISSING");
     const result = await this.deps.store.loadWorkerResult(runId);
     if (result) {
+      const identityError = this.workerResultIdentityError(task, runId, result);
+      if (identityError) return await this.block(record, "WORKER_RESULT_INVALID", identityError);
+
       const normalized = result.status === "completed"
         ? await this.move(record, "WORKER_SUCCEEDED", "worker.completed", { recovered: true })
         : await this.recoverInterruptedFailure(record);
@@ -246,6 +255,26 @@ export class Orchestrator {
     }
     const retry = await this.recoverInterruptedFailure(record);
     return await this.advance(task, retry);
+  }
+
+  private workerResultIdentityError(task: Task, expectedRunId: string, result: WorkerResult): Record<string, unknown> | undefined {
+    if (result.taskId === task.taskId && result.runId === expectedRunId) return undefined;
+    return {
+      expectedTaskId: task.taskId,
+      receivedTaskId: result.taskId,
+      expectedRunId,
+      receivedRunId: result.runId
+    };
+  }
+
+  private reviewIdentityError(task: Task, expectedRunId: string, review: Review): Record<string, unknown> | undefined {
+    if (review.taskId === task.taskId && review.runId === expectedRunId) return undefined;
+    return {
+      expectedTaskId: task.taskId,
+      receivedTaskId: review.taskId,
+      expectedRunId,
+      receivedRunId: review.runId
+    };
   }
 
   private async recoverInterruptedFailure(record: TaskRecord): Promise<TaskRecord> {
