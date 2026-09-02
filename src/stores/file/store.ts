@@ -24,15 +24,18 @@ export class FileStateStore implements StateStore {
   }
 
   async saveTask(task: Task): Promise<void> {
+    assertSafeStateIdentifier(task.taskId);
     await writeJsonAtomic(join(this.root, "tasks", `${task.taskId}.json`), TaskSchema.parse(task));
   }
 
   async loadTask(taskId: string): Promise<Task | undefined> {
+    assertSafeStateIdentifier(taskId);
     const value = await readJson<unknown>(join(this.root, "tasks", `${taskId}.json`));
     return value === undefined ? undefined : TaskSchema.parse(value);
   }
 
   async saveRecord(record: TaskRecord): Promise<void> {
+    assertSafeStateIdentifier(record.taskId);
     const parsed = TaskRecordSchema.parse(record);
     const state = (await readJson<StateFile>(join(this.root, "state.json"))) ?? { tasks: {} };
     state.tasks[record.taskId] = parsed;
@@ -40,12 +43,14 @@ export class FileStateStore implements StateStore {
   }
 
   async loadRecord(taskId: string): Promise<TaskRecord | undefined> {
+    assertSafeStateIdentifier(taskId);
     const state = await readJson<StateFile>(join(this.root, "state.json"));
     const record = state?.tasks[taskId];
     return record ? TaskRecordSchema.parse(record) : undefined;
   }
 
   async getRunDirectory(runId: string): Promise<string> {
+    assertSafeStateIdentifier(runId);
     const directory = join(this.root, "runs", runId);
     await mkdir(directory, { recursive: true });
     return directory;
@@ -57,6 +62,7 @@ export class FileStateStore implements StateStore {
   }
 
   async loadWorkerPrompt(runId: string): Promise<string | undefined> {
+    assertSafeStateIdentifier(runId);
     try {
       return await readFile(join(this.root, "runs", runId, "worker-prompt.md"), "utf8");
     } catch (error) {
@@ -66,19 +72,23 @@ export class FileStateStore implements StateStore {
   }
 
   async saveWorkerResult(runId: string, result: WorkerResult): Promise<void> {
+    assertSafeStateIdentifier(runId);
     await writeJsonAtomic(join(this.root, "runs", runId, "worker-result.json"), WorkerResultSchema.parse(result));
   }
 
   async loadWorkerResult(runId: string): Promise<WorkerResult | undefined> {
+    assertSafeStateIdentifier(runId);
     const value = await readJson<unknown>(join(this.root, "runs", runId, "worker-result.json"));
     return value === undefined ? undefined : WorkerResultSchema.parse(value);
   }
 
   async saveReview(runId: string, review: Review): Promise<void> {
+    assertSafeStateIdentifier(runId);
     await writeJsonAtomic(join(this.root, "runs", runId, "review.json"), ReviewSchema.parse(review));
   }
 
   async loadReview(runId: string): Promise<Review | undefined> {
+    assertSafeStateIdentifier(runId);
     const value = await readJson<unknown>(join(this.root, "runs", runId, "review.json"));
     return value === undefined ? undefined : ReviewSchema.parse(value);
   }
@@ -86,6 +96,20 @@ export class FileStateStore implements StateStore {
   async appendEvent(runId: string, event: OrchestratorEvent): Promise<void> {
     const dir = await this.getRunDirectory(runId);
     await appendFile(join(dir, "events.jsonl"), `${JSON.stringify(event)}\n`, "utf8");
+  }
+}
+
+function assertSafeStateIdentifier(value: string): void {
+  if (
+    value.length === 0 ||
+    value === "." ||
+    value === ".." ||
+    value.includes("/") ||
+    value.includes("\\") ||
+    value.includes(":") ||
+    value.includes("\0")
+  ) {
+    throw new Error(`Unsafe state identifier: ${JSON.stringify(value)}`);
   }
 }
 
