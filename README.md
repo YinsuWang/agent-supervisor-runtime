@@ -1,5 +1,7 @@
 # Agent Supervisor Runtime
 
+[![CI](https://github.com/YinsuWang/agent-supervisor-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/YinsuWang/agent-supervisor-runtime/actions/workflows/ci.yml)
+
 A local supervisor runtime for durable agent delegation: a reasoning-oriented supervisor plans and reviews work while a local worker executes it, with persistent state, policy-controlled retries/revisions, and pluggable adapters.
 
 The primary target is **ChatGPT Desktop Chat as planner/supervisor/reviewer + Codex as the local execution worker**. V0.1 builds the orchestration kernel first; **ChatGPT Desktop triggering/automation is intentionally not implemented yet** and will be added through the `SupervisorAdapter` boundary.
