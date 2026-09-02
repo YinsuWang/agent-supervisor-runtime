@@ -7,12 +7,17 @@ on:
     paths:
       - '.bootstrap/**'
       - '.github/workflows/bootstrap-implementation.yml'
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize]
 
 permissions:
   contents: write
 
 jobs:
   unpack:
+    if: github.head_ref == 'feat/v0.1-runtime' || github.ref_name == 'feat/v0.1-runtime'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout feature branch
