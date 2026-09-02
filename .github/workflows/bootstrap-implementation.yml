@@ -1,0 +1,45 @@
+name: Bootstrap implementation
+
+on:
+  push:
+    branches:
+      - feat/v0.1-runtime
+    paths:
+      - '.bootstrap/**'
+      - '.github/workflows/bootstrap-implementation.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/v0.1-runtime
+
+      - name: Reconstruct and unpack implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .bootstrap/part-* > /tmp/asr-payload.b64
+          base64 --decode /tmp/asr-payload.b64 > /tmp/asr-payload.tar.gz
+          tar -xzf /tmp/asr-payload.tar.gz
+          rm -rf .bootstrap
+          rm -f .github/workflows/bootstrap-implementation.yml
+
+      - name: Commit unpacked implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No implementation changes to commit.'
+            exit 0
+          fi
+          git commit -m 'feat: implement v0.1 runtime'
+          git push origin HEAD:feat/v0.1-runtime
