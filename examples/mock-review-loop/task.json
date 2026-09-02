@@ -1,0 +1,11 @@
+{
+  "taskId": "DEMO-REVIEW",
+  "projectId": "mock-review-loop",
+  "objective": "Demonstrate an automatic revision loop",
+  "instructions": ["Emit a deterministic worker result"],
+  "acceptanceCriteria": ["A supervisor revision is followed by a passing review"],
+  "execution": {
+    "workingDirectory": ".",
+    "timeoutSeconds": 30
+  }
+}

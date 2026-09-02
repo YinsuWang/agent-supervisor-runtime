@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.orchestrator/
+*.log
+.DS_Store
