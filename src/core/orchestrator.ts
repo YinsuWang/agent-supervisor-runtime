@@ -191,6 +191,18 @@ export class Orchestrator {
       } catch (error) {
         return await this.block(record, "SUPERVISOR_RESPONSE_INVALID", { error: (error as Error).message });
       }
+    }
+
+    if (review.taskId !== task.taskId || review.runId !== runId) {
+      return await this.block(record, "SUPERVISOR_RESPONSE_INVALID", {
+        expectedTaskId: task.taskId,
+        receivedTaskId: review.taskId,
+        expectedRunId: runId,
+        receivedRunId: review.runId
+      });
+    }
+
+    if (!(await this.deps.store.loadReview(runId))) {
       await this.deps.store.saveReview(runId, review);
     }
 
