@@ -13,7 +13,7 @@ Agent Supervisor Runtime is a local orchestration runtime for supervisor–worke
 - A local orchestrator manages durable state, dispatch, retries, review cycles, and policy boundaries.
 - The concrete ChatGPT Desktop trigger mechanism is deliberately isolated behind an adapter boundary and is not implemented in V0.1.
 
-The runtime must allow the supervisor and worker implementations to be replaced independently without modifying orchestration core logic.
+The runtime must allow supervisor and worker implementations to be replaced independently without modifying orchestration core logic.
 
 The guiding architectural principle is:
 
@@ -110,8 +110,6 @@ These future adapters must not require changes to orchestration core contracts.
 ## 5. Architectural Approach
 
 The project uses a Worker Adapter architecture rather than binding the orchestrator directly to `codex exec` or designing V0.1 around Codex App Server.
-
-### Why this approach
 
 Direct `codex exec` integration would be quick but would couple orchestration semantics to a single worker transport. App Server-first would provide richer agent-loop capabilities but would materially increase V0.1 complexity.
 
@@ -247,7 +245,7 @@ type Task = {
 };
 ```
 
-Tasks are validated before worker dispatch. Invalid tasks are rejected before any side effects occur.
+Tasks are schema-validated before worker dispatch. Invalid tasks are rejected before any worker side effect occurs.
 
 ## 9. Worker Result Protocol
 
@@ -341,7 +339,7 @@ Supported control actions are initially limited to:
 - `ASK_USER`
 - `NO_ACTION`
 
-The runtime validates the control block against a schema. It must not infer or guess an executable action from malformed supervisor output. Invalid control data results in a supervisor-response error state rather than execution.
+The runtime validates the control block against a schema. It must not infer or guess an executable action from malformed supervisor output. A malformed or schema-invalid control block transitions the task to `BLOCKED` with reason `SUPERVISOR_RESPONSE_INVALID`; it never dispatches a worker from guessed intent.
 
 The supervisor does not receive direct shell, filesystem-write, or git-commit primitives from the orchestrator. Side effects remain behind worker adapters.
 
@@ -384,8 +382,14 @@ DISPATCHED
    |
    v
 RUNNING
-   |\
-   | +---------- failure ----------> FAILED
+   |
+   +-- transient technical failure and retries remain --> RETRY_READY
+   |                                                      |
+   |                                                      v
+   |                                                  DISPATCHED
+   |
+   +-- technical failure with retry budget exhausted --> FAILED
+   |
    v
 RESULT_READY
    |
@@ -400,14 +404,21 @@ REVIEWING
    |                              DISPATCHED
    |
    +----------- ASK_USER ---------> BLOCKED
+   |
+   +-- invalid supervisor response -> BLOCKED
                                       |
-                                 user decision
+                                 user decision or
+                                 corrected supervisor input
                                       |
                                       v
                                     READY
 ```
 
-`FAILED` means technical execution failure. `BLOCKED` means the workflow requires human judgment or has reached an automation safety/budget boundary.
+`FAILED` means a technical execution failure whose configured automatic worker retry budget is exhausted or whose error is classified as non-retryable.
+
+`BLOCKED` means the workflow requires human judgment, corrected supervisor input, or has reached an automation safety/budget boundary.
+
+`RETRY_READY` is a technical retry state and does not increment the substantive revision counter.
 
 ## 14. Policy Engine
 
@@ -431,7 +442,7 @@ After the initial run plus three revisions, another failed review transitions to
 
 ### 14.2 Repeated unresolved findings
 
-Review findings should support stable fingerprints. If the same substantive finding remains unresolved across repeated revision cycles, the policy may block further automatic looping rather than repeating the same instruction indefinitely.
+Every review finding must have a stable fingerprint derived from its normalized category and issue identity. If the same substantive finding is present in two consecutive reviews separated by an attempted revision, the workflow transitions to `BLOCKED` with reason `REPEATED_UNRESOLVED_FINDING` rather than issuing the same automatic revision again.
 
 ### 14.3 Scope change guard
 
@@ -451,13 +462,13 @@ Such changes require `ASK_USER` or a new explicitly approved task.
 
 ### 14.4 Runtime budgets
 
-Tasks may define bounded execution budgets such as maximum runs and wall-clock duration. Budget exhaustion transitions the workflow to `BLOCKED`.
+Tasks may define bounded execution budgets such as maximum runs and wall-clock duration. Budget exhaustion transitions the workflow to `BLOCKED` with a machine-readable reason.
 
 ### 14.5 Worker retry is distinct from revision
 
 Technical execution retry and substantive review revision are independent counters.
 
-Transient process errors may be retried according to `maxWorkerRetries` without consuming the review revision budget.
+Transient process errors may be retried according to `maxWorkerRetries` without consuming the review revision budget. A retry creates a new run record linked to the same task and records its retry ordinal independently from revision number.
 
 ## 15. Persistent State
 
@@ -489,7 +500,7 @@ The state-store interface remains replaceable so future SQLite or remote impleme
 
 ## 16. Crash Recovery and Idempotence
 
-State transitions are persisted durably.
+State transitions are persisted durably before the orchestrator proceeds to the next externally visible phase.
 
 The command:
 
@@ -501,20 +512,20 @@ must inspect persisted state and continue from the last completed durable phase.
 
 Already completed successful phases must not be re-executed solely because the orchestrator process restarted.
 
-Recovery logic distinguishes, at minimum:
+Recovery behavior is deterministic:
 
-- worker not started
-- worker running when process disappeared
-- worker result already persisted
-- review already persisted
-- revision pending
-- task blocked or complete
+- `CREATED`, `READY`, `RETRY_READY`, and `REVISION_READY` resume from their next normal transition.
+- `RESULT_READY` resumes at review without rerunning the worker.
+- `REVIEWING` with a persisted review applies that review; without a persisted review it requests review again.
+- `COMPLETED`, `FAILED`, and `BLOCKED` do not automatically execute further work.
+- `RUNNING` with a persisted worker result is normalized to `RESULT_READY`.
+- `RUNNING` without a persisted result is treated as an interrupted worker attempt. V0.1 does not promise arbitrary subprocess reattachment; it records the interruption and applies the worker retry policy. If retry is permitted, it moves to `RETRY_READY`; otherwise it moves to `FAILED`.
 
-Long-running worker execution must not be repeated automatically when completion evidence already exists.
+A worker run is never duplicated when durable completion evidence for that run already exists.
 
 ## 17. Configuration
 
-Project configuration uses a local file such as:
+Project configuration uses:
 
 ```text
 orchestrator.config.json
@@ -585,7 +596,7 @@ Restores a previously started task from durable state.
 
 ### `status`
 
-Reports task state, current run, revision count, worker adapter, and elapsed timing information.
+Reports task state, current run, revision count, retry count, worker adapter, block/failure reason when present, and elapsed timing information.
 
 ### `doctor`
 
@@ -603,12 +614,14 @@ Representative events include:
 - `worker.started`
 - `worker.completed`
 - `worker.failed`
+- `worker.interrupted`
 - `worker.retry_scheduled`
 - `result.persisted`
 - `review.requested`
 - `review.pass`
 - `review.revise`
 - `review.ask_user`
+- `supervisor.response_invalid`
 - `task.blocked`
 - `task.completed`
 
@@ -618,7 +631,7 @@ This event stream is the future integration surface for dashboards and remote ob
 
 The runtime does not require GitHub.
 
-Git may be used by `CodexExecWorker` and evidence collection when the target working directory is a Git repository, but non-Git projects should still be representable where possible.
+Git may be used by `CodexExecWorker` and evidence collection when the target working directory is a Git repository. Git-specific evidence fields are absent or empty for non-Git working directories; non-Git execution remains valid unless a task explicitly requires Git artifacts.
 
 Future GitHub capabilities may be implemented as separate adapters or sinks, such as:
 
@@ -656,7 +669,7 @@ Reusable contract suites validate:
 - `SupervisorAdapter`
 - `StateStore`
 
-A future adapter should be able to run the relevant contract suite without understanding orchestrator internals.
+A future adapter must be able to run the relevant contract suite without understanding orchestrator internals.
 
 ### 22.3 Integration tests
 
@@ -669,11 +682,15 @@ Task -> worker success -> REVISE -> revision worker -> PASS
 ```
 
 ```text
-Task -> transient worker failure -> retry -> success
+Task -> transient worker failure -> RETRY_READY -> retry -> success
 ```
 
 ```text
 Task -> REVISE repeatedly -> revision limit -> BLOCKED
+```
+
+```text
+Task -> same finding -> revision -> same finding -> BLOCKED
 ```
 
 ```text
@@ -682,6 +699,10 @@ Task -> ASK_USER -> BLOCKED -> resume after user decision
 
 ```text
 Task -> persisted RESULT_READY -> process restart -> resume at review without rerunning worker
+```
+
+```text
+Task -> invalid supervisor control block -> BLOCKED with SUPERVISOR_RESPONSE_INVALID
 ```
 
 ### 22.4 Real Codex integration tests
@@ -727,17 +748,19 @@ V0.1 is complete only when all of the following are true:
 6. REVISE causes a genuine subsequent worker run with revision context.
 7. `maxRevisions` is enforced.
 8. technical worker retries are tracked separately from substantive revisions.
-9. ASK_USER transitions correctly to BLOCKED.
-10. a crashed/interrupted orchestrator can resume from durable state.
-11. successful completed phases are not repeated solely because of orchestrator restart.
-12. all workflow state is persisted locally.
-13. all key transitions are written to `events.jsonl`.
-14. orchestration core does not depend on GitHub.
-15. orchestration core does not depend on ChatGPT Desktop.
-16. `SupervisorAdapter` can be replaced without changing `Orchestrator`.
-17. `WorkerAdapter` can be replaced without changing `Orchestrator`.
-18. automated tests cover `Task -> Execute -> Review -> Revise -> Pass` end to end using fake/scripted adapters.
-19. README instructions let a new user run the demonstration workflow in approximately 5–10 commands.
+9. repeated unresolved findings are blocked according to the two-consecutive-review rule.
+10. ASK_USER transitions correctly to BLOCKED.
+11. malformed supervisor control data transitions to BLOCKED without worker dispatch.
+12. a crashed/interrupted orchestrator can resume from durable state.
+13. successful completed phases are not repeated solely because of orchestrator restart.
+14. all workflow state is persisted locally.
+15. all key transitions are written to `events.jsonl`.
+16. orchestration core does not depend on GitHub.
+17. orchestration core does not depend on ChatGPT Desktop.
+18. `SupervisorAdapter` can be replaced without changing `Orchestrator`.
+19. `WorkerAdapter` can be replaced without changing `Orchestrator`.
+20. automated tests cover `Task -> Execute -> Review -> Revise -> Pass` end to end using fake/scripted adapters.
+21. README instructions let a new user run the demonstration workflow in approximately 5–10 commands.
 
 ## 26. Open-Source Positioning
 
