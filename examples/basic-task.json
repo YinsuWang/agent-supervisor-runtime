@@ -1,0 +1,12 @@
+{
+  "taskId": "DEMO-001",
+  "projectId": "demo",
+  "objective": "Run a minimal worker task",
+  "instructions": ["Report that the task was executed"],
+  "constraints": ["Do not modify files"],
+  "acceptanceCriteria": ["The worker exits successfully"],
+  "execution": {
+    "workingDirectory": ".",
+    "timeoutSeconds": 30
+  }
+}

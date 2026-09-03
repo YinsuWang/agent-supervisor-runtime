@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "worker": {
+    "adapter": "codex-exec",
+    "command": "node",
+    "argsPrefix": ["examples/mock-review-loop/fake-worker.mjs"],
+    "defaultTimeoutMinutes": 1
+  },
+  "supervisor": {
+    "adapter": "mock",
+    "scriptFile": "reviews.json"
+  },
+  "policy": {
+    "maxRevisions": 3,
+    "maxWorkerRetries": 2,
+    "maxWallClockMinutes": 5
+  },
+  "state": {
+    "adapter": "file",
+    "directory": ".runtime-state"
+  }
+}

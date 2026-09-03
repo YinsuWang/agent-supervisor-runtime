@@ -1,0 +1,20 @@
+[
+  {
+    "decision": "REVISE",
+    "summary": "The first pass needs one deterministic revision.",
+    "findings": [
+      {
+        "severity": "minor",
+        "category": "demo",
+        "message": "Exercise the revision path.",
+        "fingerprint": "demo:first-revision"
+      }
+    ],
+    "revisionInstructions": ["Run the task one more time without broadening scope."]
+  },
+  {
+    "decision": "PASS",
+    "summary": "The deterministic revision loop completed successfully.",
+    "findings": []
+  }
+]
