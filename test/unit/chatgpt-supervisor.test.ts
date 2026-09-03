@@ -62,6 +62,7 @@ class FakeTransport implements ConversationTransport {
   constructor(
     private readonly response: (request: ResponseRequest) => string,
     private readonly failSend = false,
+    private readonly failWait = false,
   ) {}
 
   async connect(_binding: ConversationBinding): Promise<void> {}
@@ -70,6 +71,7 @@ class FakeTransport implements ConversationTransport {
     this.sent.push({ message, context });
   }
   async waitForResponse(request: ResponseRequest): Promise<TransportResponse> {
+    if (this.failWait) throw new Error("response unavailable");
     return { content: this.response(request) };
   }
   async health(): Promise<TransportHealth> {
@@ -85,16 +87,20 @@ async function makeAdapter(transport: ConversationTransport) {
   await store.initialize("project_1");
   const ledger = new MessageLedger(store);
   return {
-    adapter: new ChatGPTSupervisorAdapter({
-      binding,
-      transport,
-      ledger,
-      leaseEpoch: () => 14,
-      messageId: () => "msg_request",
-      nextSequence: () => 7,
-    }),
+    adapter: createAdapter(transport, ledger),
     ledger,
   };
+}
+
+function createAdapter(transport: ConversationTransport, ledger: MessageLedger): ChatGPTSupervisorAdapter {
+  return new ChatGPTSupervisorAdapter({
+    binding,
+    transport,
+    ledger,
+    leaseEpoch: () => 14,
+    messageId: () => "msg_request",
+    nextSequence: () => 7,
+  });
 }
 
 function reply(overrides: Record<string, unknown> = {}): string {
@@ -145,5 +151,24 @@ describe("ChatGPTSupervisorAdapter", () => {
       SupervisorUnavailableError,
     );
     expect((await ledger.get("msg_request"))?.state).toBe("PENDING");
+  });
+
+  it("reuses a persisted SENT request after response recovery without redelivery", async () => {
+    const firstTransport = new FakeTransport(() => reply(), false, true);
+    const { adapter: firstAdapter, ledger } = await makeAdapter(firstTransport);
+
+    await expect(firstAdapter.requestReview({ task, result, revisionNumber: 0 })).rejects.toBeInstanceOf(
+      SupervisorUnavailableError,
+    );
+    expect(firstTransport.sent).toHaveLength(1);
+    expect((await ledger.get("msg_request"))?.state).toBe("SENT");
+
+    const recoveredTransport = new FakeTransport(() => reply());
+    const recoveredAdapter = createAdapter(recoveredTransport, ledger);
+    const review = await recoveredAdapter.requestReview({ task, result, revisionNumber: 0 });
+
+    expect(review.decision).toBe("PASS");
+    expect(recoveredTransport.sent).toHaveLength(0);
+    expect((await ledger.get("msg_request"))?.state).toBe("CONSUMED");
   });
 });
