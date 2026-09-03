@@ -35,24 +35,27 @@ export class TransportManager {
   }
 
   setExchangeInFlight(holder: string, value: boolean): void {
-    const registration = this.requireRegistration(holder);
-    registration.exchangeInFlight = value;
+    this.requireRegistration(holder).exchangeInFlight = value;
   }
 
   async acquire(bindingId: string, holder: string, ttlMs = this.defaultTtlMs): Promise<TransportLease | undefined> {
     const requester = this.requireRegistration(holder);
     const current = await this.leases.current(bindingId);
 
-    if (!current || new Date(current.expiresAt).getTime() <= Date.now()) {
+    if (!current || current.holder === holder) {
       const lease = await this.leases.acquire(bindingId, holder, ttlMs);
       requester.status = "ACTIVE";
       this.markOthersStandby(holder);
       return lease;
     }
 
-    if (current.holder === holder) {
+    try {
+      const lease = await this.leases.acquire(bindingId, holder, ttlMs);
       requester.status = "ACTIVE";
-      return current;
+      this.markOthersStandby(holder);
+      return lease;
+    } catch (error) {
+      if (!(error instanceof TransportLeaseError) || error.code !== "LEASE_HELD") throw error;
     }
 
     const active = this.requireRegistration(current.holder);
