@@ -2,6 +2,7 @@ import type { OrchestratorEvent, TaskRecord } from "./state.js";
 import type { Task } from "./task.js";
 import type { WorkerResult } from "./result.js";
 import type { Review } from "./review.js";
+import type { MessageLedgerEntry } from "../conversations/message-ledger.js";
 
 export interface StateStore {
   initialize(projectId: string): Promise<void>;
@@ -17,4 +18,7 @@ export interface StateStore {
   saveReview(runId: string, review: Review): Promise<void>;
   loadReview(runId: string): Promise<Review | undefined>;
   appendEvent(runId: string, event: OrchestratorEvent): Promise<void>;
+  saveMessageRecord(record: MessageLedgerEntry): Promise<void>;
+  loadMessageRecord(messageId: string): Promise<MessageLedgerEntry | undefined>;
+  listMessageRecords(): Promise<MessageLedgerEntry[]>;
 }
