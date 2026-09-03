@@ -6,7 +6,7 @@ import {
   type SupervisorAdapter,
 } from "../contracts/supervisor.js";
 import { ConversationBindingSchema, type ConversationBinding } from "../conversations/binding.js";
-import { MessageLedger } from "../conversations/message-ledger.js";
+import { MessageLedger, type MessageLedgerEntry } from "../conversations/message-ledger.js";
 import { ConversationReconciler } from "../conversations/reconcile.js";
 import type { ConversationTransport } from "../conversations/transport.js";
 import { AsrEnvelopeSchema, SupervisorReplyEnvelopeSchema, type SupervisorReplyEnvelope } from "./contracts.js";
@@ -46,38 +46,56 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
   }
 
   async requestReview(input: ReviewRequest): Promise<Review> {
-    const messageId = this.#messageId();
+    const existing = (await this.#ledger.findPendingForBinding(this.#binding.bindingId)).find(
+      (entry) =>
+        entry.taskId === input.task.taskId &&
+        entry.runId === input.result.runId &&
+        entry.kind === "REVIEW_REQUEST" &&
+        entry.direction === "outbound",
+    );
+
     const envelope = AsrEnvelopeSchema.parse({
       protocolVersion: "ASR/1",
-      messageId,
+      messageId: existing?.messageId ?? this.#messageId(),
       bindingId: this.#binding.bindingId,
       taskId: input.task.taskId,
       runId: input.result.runId,
       kind: "REVIEW_REQUEST",
-      sequence: this.#nextSequence(),
+      sequence: existing?.sequence ?? this.#nextSequence(),
     });
-    const content = JSON.stringify({
-      ...envelope,
-      payload: {
-        task: input.task,
-        result: input.result,
-        previousReview: input.previousReview,
-        revisionNumber: input.revisionNumber,
-      },
-    });
+    const content = buildReviewRequestContent(envelope, input);
 
-    await this.#ledger.append({
-      messageId,
-      bindingId: envelope.bindingId,
-      taskId: envelope.taskId,
-      runId: envelope.runId,
-      kind: envelope.kind,
-      direction: "outbound",
-      sequence: envelope.sequence,
-      payloadHash: sha256(content),
-    });
+    if (!existing) {
+      await this.#ledger.append({
+        messageId: envelope.messageId,
+        bindingId: envelope.bindingId,
+        taskId: envelope.taskId,
+        runId: envelope.runId,
+        kind: envelope.kind,
+        direction: "outbound",
+        sequence: envelope.sequence,
+        payloadHash: sha256(content),
+      });
+    } else if (existing.payloadHash !== sha256(content)) {
+      throw new Error(`Persisted review request payload mismatch: ${existing.messageId}`);
+    }
+
+    const current = existing ?? (await this.#ledger.get(envelope.messageId))!;
+    if (current.state === "CLAIMED") {
+      throw new SupervisorUnavailableError(
+        `Review request ${current.messageId} has ambiguous CLAIMED delivery state and requires reconciliation`,
+      );
+    }
+
+    if (current.state === "PENDING") {
+      await this.sendPending(envelope.messageId, content);
+    }
+
+    return await this.waitForReview(envelope);
+  }
+
+  private async sendPending(messageId: string, content: string): Promise<void> {
     await this.#ledger.transition(messageId, "CLAIMED");
-
     try {
       await this.#transport.connect(this.#binding);
       await this.#transport.send(
@@ -90,12 +108,20 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
       if (current?.state === "CLAIMED") await this.#ledger.transition(messageId, "PENDING");
       throw new SupervisorUnavailableError("ChatGPT supervisor transport is unavailable", { cause: error });
     }
+  }
 
+  private async waitForReview(envelope: {
+    messageId: string;
+    bindingId: string;
+    taskId: string;
+    runId: string;
+  }): Promise<Review> {
     let responseContent: string;
     try {
+      await this.#transport.connect(this.#binding);
       responseContent = (await this.#transport.waitForResponse({
         bindingId: this.#binding.bindingId,
-        inReplyTo: messageId,
+        inReplyTo: envelope.messageId,
       })).content;
     } catch (error) {
       throw new SupervisorUnavailableError("ChatGPT supervisor response is unavailable", { cause: error });
@@ -107,7 +133,7 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
     await this.#reconciler.reconcile(this.#binding.bindingId, [
       {
         type: "request",
-        messageId,
+        messageId: envelope.messageId,
         bindingId: envelope.bindingId,
         taskId: envelope.taskId,
         runId: envelope.runId,
@@ -122,10 +148,40 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
         content: responseContent,
       },
     ]);
-    await this.#ledger.transition(messageId, "CONSUMED");
+
+    const afterReconcile = await this.#ledger.get(envelope.messageId);
+    if (afterReconcile?.state === "RESPONDED") {
+      await this.#ledger.transition(envelope.messageId, "CONSUMED");
+    } else if (afterReconcile?.state !== "CONSUMED") {
+      throw new Error(`Review request did not reconcile to RESPONDED: ${envelope.messageId}`);
+    }
 
     return toReview(reply);
   }
+}
+
+function buildReviewRequestContent(
+  envelope: {
+    protocolVersion: "ASR/1";
+    messageId: string;
+    bindingId: string;
+    taskId: string;
+    runId: string;
+    kind: "REVIEW_REQUEST";
+    sequence: number;
+    correlationId?: string;
+  },
+  input: ReviewRequest,
+): string {
+  return JSON.stringify({
+    ...envelope,
+    payload: {
+      task: input.task,
+      result: input.result,
+      previousReview: input.previousReview,
+      revisionNumber: input.revisionNumber,
+    },
+  });
 }
 
 function parseReply(content: string): SupervisorReplyEnvelope {
