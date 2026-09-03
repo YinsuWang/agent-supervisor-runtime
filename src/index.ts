@@ -44,6 +44,7 @@ export {
   parseRuntimeFrame,
   validateHello,
 } from "./runtime/contracts.js";
+export { RuntimeDaemon, defaultRuntimeHome } from "./runtime/daemon.js";
 export {
   DEFAULT_MAX_IPC_FRAME_BYTES,
   LengthPrefixedJsonDecoder,
@@ -52,6 +53,13 @@ export {
 } from "./runtime/ipc.js";
 export { NamedPipeIpcClient, NamedPipeIpcServer, runtimeEndpointForHome } from "./runtime/named-pipe.js";
 export { acquireSingleInstanceLock } from "./runtime/single-instance.js";
+export { NativeHostBridge } from "./native-host/bridge.js";
+export {
+  MAX_NATIVE_HOST_INPUT_BYTES,
+  MAX_NATIVE_HOST_OUTPUT_BYTES,
+  NativeMessageDecoder,
+  encodeNativeMessage,
+} from "./native-host/framing.js";
 export { SupervisorUnavailableError } from "./contracts/supervisor.js";
 export type { WorkerAdapter, WorkerExecutionContext } from "./contracts/worker.js";
 export type { SupervisorAdapter, ReviewRequest, SupervisorNotification } from "./contracts/supervisor.js";
@@ -94,5 +102,7 @@ export type {
 export type { ContextBrokerOptions } from "./context/broker.js";
 export type { RuntimeEvidenceProvider } from "./context/sources/runtime-evidence.js";
 export type { HelloPayload, RuntimeFrame, RuntimeFrameType, WelcomePayload } from "./runtime/contracts.js";
+export type { RuntimeCommandHandler, RuntimeDaemonOptions } from "./runtime/daemon.js";
 export type { RuntimeIpcClient, RuntimeIpcConnection, RuntimeIpcServer } from "./runtime/ipc.js";
 export type { SingleInstanceLock, SingleInstanceOptions } from "./runtime/single-instance.js";
+export type { NativeHostBridgeOptions } from "./native-host/bridge.js";
