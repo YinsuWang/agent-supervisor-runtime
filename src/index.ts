@@ -16,6 +16,17 @@ export {
   TransportLeaseSchema,
 } from "./conversations/lease.js";
 export { TransportManager } from "./conversations/transport-manager.js";
+export { ContextBroker } from "./context/broker.js";
+export {
+  ContextBrokerError,
+  ContextCapabilitySchema,
+  ContextManifestSchema,
+  ContextRequestSchema,
+  ContextResponseSchema,
+  ContextScopeSchema,
+} from "./context/contracts.js";
+export { WorkspacePolicy } from "./context/workspace-policy.js";
+export { RuntimeEvidenceSource } from "./context/sources/runtime-evidence.js";
 export { SupervisorUnavailableError } from "./contracts/supervisor.js";
 export type { WorkerAdapter, WorkerExecutionContext } from "./contracts/worker.js";
 export type { SupervisorAdapter, ReviewRequest, SupervisorNotification } from "./contracts/supervisor.js";
@@ -39,3 +50,14 @@ export type {
   TransportSendContext,
   TransportStatus,
 } from "./conversations/transport.js";
+export type {
+  ContextCapability,
+  ContextManifest,
+  ContextManifestItem,
+  ContextQuery,
+  ContextRequest,
+  ContextResponse,
+  ContextScope,
+} from "./context/contracts.js";
+export type { ContextBrokerOptions } from "./context/broker.js";
+export type { RuntimeEvidenceProvider } from "./context/sources/runtime-evidence.js";
