@@ -1,6 +1,6 @@
 {
   "name": "agent-supervisor-runtime",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A local supervisor runtime for durable supervisor-worker agent delegation.",
   "type": "module",
   "bin": {
@@ -13,8 +13,9 @@
     "node": ">=20.19"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json && npm run build:extension",
+    "build:extension": "node scripts/build-extension.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p extension/tsconfig.json --noEmit",
     "test": "vitest",
     "test:watch": "vitest"
   },
@@ -23,7 +24,9 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/chrome": "^0.0.287",
     "@types/node": "^22.10.0",
+    "esbuild": "^0.25.0",
     "typescript": "^5.7.2",
     "vitest": "^4.1.11"
   },

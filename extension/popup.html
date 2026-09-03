@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Supervisor Runtime</title>
+  <style>
+    body { font-family: system-ui, sans-serif; width: 280px; margin: 16px; }
+    button { width: 100%; padding: 8px 12px; }
+    #status { margin-top: 12px; font-size: 12px; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <button id="bind" type="button">Bind this conversation</button>
+  <div id="status" role="status">Checking runtime…</div>
+  <script type="module" src="dist/popup.js"></script>
+</body>
+</html>
