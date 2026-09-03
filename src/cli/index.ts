@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { fileURLToPath } from "node:url";
 import { initCommand } from "./commands/init.js";
 import { runCommand } from "./commands/run.js";
 import { resumeCommand } from "./commands/resume.js";
 import { statusCommand } from "./commands/status.js";
 import { doctorCommand } from "./commands/doctor.js";
+import { browserInstallCommand, browserUninstallCommand } from "./commands/browser.js";
+import { setupCommand } from "./commands/setup.js";
+import { serviceDisableCommand, serviceEnableCommand, serviceStatusCommand } from "./commands/service.js";
 import { RuntimeDaemon, defaultRuntimeHome } from "../runtime/daemon.js";
 
 const program = new Command();
@@ -31,18 +35,69 @@ program.command("daemon")
   .action(async (options: { runtimeHome: string }) => {
     const daemon = new RuntimeDaemon({ runtimeHome: options.runtimeHome, runtimeVersion: "0.2.0" });
     await daemon.start();
-    const shutdown = async () => {
-      await daemon.stop();
-      process.exitCode = 0;
-    };
+    const shutdown = async () => { await daemon.stop(); process.exitCode = 0; };
     process.once("SIGINT", () => void shutdown());
     process.once("SIGTERM", () => void shutdown());
   });
+
+program.command("setup")
+  .description("configure the current-user Chrome native messaging bridge")
+  .requiredOption("--extension-id <id>", "stable Chrome extension id")
+  .requiredOption("--host-path <path>", "native host executable path")
+  .option("--runtime-home <path>", "runtime home directory", defaultRuntimeHome())
+  .option("--dry-run", "show intended setup without writing files or registry")
+  .action(async (options: { extensionId: string; hostPath: string; runtimeHome: string; dryRun?: boolean }) => {
+    await requireWindowsOrDryRun(options.dryRun);
+    const result = await setupCommand(options);
+    console.log(JSON.stringify(result, null, 2));
+  });
+
+const browser = program.command("browser").description("manage Chrome native messaging registration");
+browser.command("install")
+  .requiredOption("--extension-id <id>", "stable Chrome extension id")
+  .requiredOption("--host-path <path>", "native host executable path")
+  .option("--runtime-home <path>", "runtime home directory", defaultRuntimeHome())
+  .option("--dry-run", "show intended changes")
+  .action(async (options: { extensionId: string; hostPath: string; runtimeHome: string; dryRun?: boolean }) => {
+    await requireWindowsOrDryRun(options.dryRun);
+    console.log(JSON.stringify(await browserInstallCommand(options), null, 2));
+  });
+browser.command("uninstall")
+  .option("--runtime-home <path>", "runtime home directory", defaultRuntimeHome())
+  .option("--dry-run", "show intended changes")
+  .action(async (options: { runtimeHome: string; dryRun?: boolean }) => {
+    await requireWindowsOrDryRun(options.dryRun);
+    console.log(JSON.stringify(await browserUninstallCommand(options), null, 2));
+  });
+
+const service = program.command("service").description("manage optional per-user login startup");
+service.command("enable")
+  .option("--runtime-home <path>", "runtime home directory", defaultRuntimeHome())
+  .option("--dry-run", "show intended changes")
+  .action(async (options: { runtimeHome: string; dryRun?: boolean }) => {
+    await requireWindowsOrDryRun(options.dryRun);
+    const cliPath = fileURLToPath(import.meta.url);
+    console.log(JSON.stringify(await serviceEnableCommand({ ...options, cliPath }), null, 2));
+  });
+service.command("disable")
+  .option("--dry-run", "show intended changes")
+  .action(async (options: { dryRun?: boolean }) => {
+    await requireWindowsOrDryRun(options.dryRun);
+    console.log(JSON.stringify(await serviceDisableCommand(options), null, 2));
+  });
+service.command("status").action(async () => {
+  if (process.platform !== "win32") throw new Error("WINDOWS_ONLY");
+  console.log((await serviceStatusCommand({})) ? "enabled" : "disabled");
+});
 
 program.parseAsync().catch((error) => {
   console.error((error as Error).message);
   process.exitCode = 4;
 });
+
+async function requireWindowsOrDryRun(dryRun?: boolean): Promise<void> {
+  if (process.platform !== "win32" && !dryRun) throw new Error("WINDOWS_ONLY");
+}
 
 function exitCodeFor(state: string): number {
   if (state === "COMPLETED") return 0;
