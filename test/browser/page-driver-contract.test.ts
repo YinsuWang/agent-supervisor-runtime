@@ -69,7 +69,7 @@ class FixturePageDriver implements ChatGptPageDriver {
       composer: (await this.page.getByRole("textbox", { name: "Message ChatGPT" }).count()) === 1,
       submit: (await this.page.getByRole("button", { name: "Send message" }).count()) === 1,
       assistantMessages: (await this.page.locator('#messages[aria-label="Conversation messages"]').count()) === 1,
-      generationLifecycle: (await this.page.getByRole("button", { name: "Stop generating" }).count()) === 1,
+      generationLifecycle: (await this.page.locator('button[aria-label="Stop generating"]').count()) === 1,
     };
     return evaluatePageCompatibility(report);
   }
