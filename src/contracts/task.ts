@@ -1,7 +1,12 @@
 import { z } from "zod";
 
+const stateIdentifier = z.string().min(1).refine(
+  (value) => value !== "." && value !== ".." && !/[\\/:\0]/.test(value),
+  { message: "must be a safe state identifier without path separators, colon, or NUL" }
+);
+
 export const TaskSchema = z.object({
-  taskId: z.string().min(1),
+  taskId: stateIdentifier,
   projectId: z.string().min(1),
   objective: z.string().min(1),
   context: z.string().optional(),
@@ -14,8 +19,7 @@ export const TaskSchema = z.object({
   }).optional(),
   execution: z.object({
     workingDirectory: z.string().min(1),
-    timeoutSeconds: z.number().int().positive().optional(),
-    allowNetwork: z.boolean().optional()
+    timeoutSeconds: z.number().int().positive().optional()
   }),
   budget: z.object({
     maxRuns: z.number().int().positive().optional(),
