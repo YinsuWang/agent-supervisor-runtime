@@ -6,10 +6,15 @@ import {
   type SupervisorAdapter,
 } from "../contracts/supervisor.js";
 import { ConversationBindingSchema, type ConversationBinding } from "../conversations/binding.js";
-import { MessageLedger, type MessageLedgerEntry } from "../conversations/message-ledger.js";
+import { MessageLedger } from "../conversations/message-ledger.js";
 import { ConversationReconciler } from "../conversations/reconcile.js";
 import type { ConversationTransport } from "../conversations/transport.js";
-import { AsrEnvelopeSchema, SupervisorReplyEnvelopeSchema, type SupervisorReplyEnvelope } from "./contracts.js";
+import {
+  AsrEnvelopeSchema,
+  SupervisorReplyEnvelopeSchema,
+  type AsrEnvelope,
+  type SupervisorReplyEnvelope,
+} from "./contracts.js";
 
 export type ChatGPTSupervisorAdapterOptions = {
   binding: ConversationBinding;
@@ -160,19 +165,7 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
   }
 }
 
-function buildReviewRequestContent(
-  envelope: {
-    protocolVersion: "ASR/1";
-    messageId: string;
-    bindingId: string;
-    taskId: string;
-    runId: string;
-    kind: "REVIEW_REQUEST";
-    sequence: number;
-    correlationId?: string;
-  },
-  input: ReviewRequest,
-): string {
+function buildReviewRequestContent(envelope: AsrEnvelope, input: ReviewRequest): string {
   return JSON.stringify({
     ...envelope,
     payload: {
