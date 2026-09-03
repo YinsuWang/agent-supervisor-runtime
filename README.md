@@ -28,7 +28,7 @@ No ChatGPT Work, Full MCP, Desktop UI automation, mandatory GitHub, Codex App Se
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 20.19+
 - Windows 10/11 + PowerShell 7 is the first-class target; the orchestration core is kept cross-platform where practical
 - Codex CLI only for real `codex-exec` runs
 
@@ -37,7 +37,7 @@ No ChatGPT Work, Full MCP, Desktop UI automation, mandatory GitHub, Codex App Se
 ```bash
 git clone https://github.com/YinsuWang/agent-supervisor-runtime.git
 cd agent-supervisor-runtime
-npm ci
+npm install
 npm run build
 ```
 
@@ -48,7 +48,7 @@ Until the package is published to npm, either invoke the built CLI with `node di
 The demo uses the real orchestration core and `CodexExecWorker` process wrapper, but injects Node as the command so it consumes no Codex quota.
 
 ```bash
-npm ci
+npm install
 npm run build
 node dist/cli/index.js --config examples/mock-review-loop/orchestrator.config.json run examples/mock-review-loop/task.json
 node dist/cli/index.js --config examples/mock-review-loop/orchestrator.config.json status DEMO-REVIEW
@@ -102,7 +102,7 @@ See [docs/adapters.md](docs/adapters.md). V0.2's key extension is a ChatGPT Desk
 ## Development
 
 ```bash
-npm ci
+npm install
 npm run typecheck
 npm test -- --run
 npm run build
