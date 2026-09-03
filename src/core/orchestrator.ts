@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { StateStore } from "../contracts/state-store.js";
-import type { SupervisorAdapter } from "../contracts/supervisor.js";
+import { SupervisorUnavailableError, type SupervisorAdapter } from "../contracts/supervisor.js";
 import type { Task } from "../contracts/task.js";
 import type { TaskRecord } from "../contracts/state.js";
 import type { WorkerAdapter } from "../contracts/worker.js";
@@ -201,6 +201,7 @@ export class Orchestrator {
         raw = await this.deps.supervisor.requestReview({ task, result, previousReview, revisionNumber: record.revisionCount });
         review = this.policy.validateReview(raw);
       } catch (error) {
+        if (error instanceof SupervisorUnavailableError) throw error;
         return await this.block(record, "SUPERVISOR_RESPONSE_INVALID", { error: (error as Error).message });
       }
     }

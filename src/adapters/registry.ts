@@ -5,7 +5,12 @@ import { PolicyEngine } from "../core/policy-engine.js";
 import { Orchestrator } from "../core/orchestrator.js";
 import { FileStateStore } from "../stores/file/store.js";
 import { MockSupervisorAdapter } from "../supervisors/mock/adapter.js";
+import { ChatGPTSupervisorAdapter, type ChatGPTSupervisorAdapterOptions } from "../chatgpt/supervisor-adapter.js";
 import { CodexExecWorker } from "../workers/codex-exec/adapter.js";
+
+export function createChatGPTSupervisor(options: ChatGPTSupervisorAdapterOptions): ChatGPTSupervisorAdapter {
+  return new ChatGPTSupervisorAdapter(options);
+}
 
 export async function buildRuntime(config: RuntimeConfig, configPath = "orchestrator.config.json") {
   const base = dirname(resolve(configPath));
