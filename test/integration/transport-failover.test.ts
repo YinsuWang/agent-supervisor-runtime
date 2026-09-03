@@ -1,5 +1,12 @@
-import { describe, expect, it } from "vitest";
-import { InMemoryTransportLeaseStore, TransportLeaseCoordinator } from "../../src/conversations/lease.js";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+  FileTransportLeaseStore,
+  InMemoryTransportLeaseStore,
+  TransportLeaseCoordinator,
+} from "../../src/conversations/lease.js";
 import { TransportManager } from "../../src/conversations/transport-manager.js";
 import type {
   ConversationTransport,
@@ -10,6 +17,11 @@ import type {
   TransportSendContext,
 } from "../../src/conversations/transport.js";
 import type { ConversationBinding } from "../../src/conversations/binding.js";
+
+const tempDirs: string[] = [];
+afterEach(async () => {
+  await Promise.all(tempDirs.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
+});
 
 class FakeTransport implements ConversationTransport {
   constructor(readonly id: string) {}
@@ -62,5 +74,20 @@ describe("transport failover", () => {
     expect(chrome?.epoch).toBe((background?.epoch ?? 0) + 1);
     expect(manager.status("chrome")).toBe("ACTIVE");
     expect(manager.status("background")).toBe("STANDBY");
+  });
+
+  it("preserves the fencing epoch across coordinator reconstruction", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "asr-lease-"));
+    tempDirs.push(directory);
+    let now = new Date("2026-01-01T00:00:00.000Z");
+
+    const first = new TransportLeaseCoordinator(new FileTransportLeaseStore(directory), () => now);
+    const chrome = await first.acquire("bind_1", "chrome", 1_000);
+    expect(chrome.epoch).toBe(1);
+
+    now = new Date("2026-01-01T00:00:02.000Z");
+    const recovered = new TransportLeaseCoordinator(new FileTransportLeaseStore(directory), () => now);
+    const background = await recovered.acquire("bind_1", "background", 1_000);
+    expect(background.epoch).toBe(2);
   });
 });
