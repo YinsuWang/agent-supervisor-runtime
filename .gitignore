@@ -1,6 +1,9 @@
 node_modules/
 dist/
+
+# Runtime state
 .orchestrator/
 .runtime-state/
+
 *.log
 .DS_Store
