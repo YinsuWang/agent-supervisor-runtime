@@ -40,6 +40,10 @@ chrome.runtime.onMessage.addListener((raw, _sender, sendResponse) => {
         sendResponse({ ok: true, status: await currentStatus() });
         return;
       }
+      if (parsed.data.type !== "REGISTER_BINDING") {
+        sendResponse({ ok: false, error: "UNSUPPORTED_EXTENSION_MESSAGE" });
+        return;
+      }
       const identity = ConversationIdentitySchema.parse(parsed.data.identity);
       await sendRuntimeCommand("BIND_CONVERSATION", identity);
       await chrome.storage.local.set({ binding: identity });
