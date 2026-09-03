@@ -32,19 +32,20 @@ chrome.runtime.onMessage.addListener((raw, _sender, sendResponse) => {
     return false;
   }
 
-  if (parsed.data.type === "GET_CONVERSATION_IDENTITY") return false;
+  const message = parsed.data;
+  if (message.type === "GET_CONVERSATION_IDENTITY") return false;
 
   void (async () => {
     try {
-      if (parsed.data.type === "GET_EXTENSION_STATUS") {
+      if (message.type === "GET_EXTENSION_STATUS") {
         sendResponse({ ok: true, status: await currentStatus() });
         return;
       }
-      if (parsed.data.type !== "REGISTER_BINDING") {
+      if (message.type !== "REGISTER_BINDING") {
         sendResponse({ ok: false, error: "UNSUPPORTED_EXTENSION_MESSAGE" });
         return;
       }
-      const identity = ConversationIdentitySchema.parse(parsed.data.identity);
+      const identity = ConversationIdentitySchema.parse(message.identity);
       await sendRuntimeCommand("BIND_CONVERSATION", identity);
       await chrome.storage.local.set({ binding: identity });
       sendResponse({ ok: true, binding: identity });
