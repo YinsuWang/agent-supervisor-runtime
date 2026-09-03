@@ -1,4 +1,7 @@
+import { mkdir } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { z } from "zod";
+import { readJson, writeJsonAtomic } from "../utils/json.js";
 
 export const TransportLeaseSchema = z.object({
   bindingId: z.string().min(1),
@@ -25,6 +28,27 @@ export class InMemoryTransportLeaseStore implements TransportLeaseStore {
   async save(lease: TransportLease): Promise<void> {
     const parsed = TransportLeaseSchema.parse(lease);
     this.#leases.set(parsed.bindingId, { ...parsed });
+  }
+}
+
+export class FileTransportLeaseStore implements TransportLeaseStore {
+  readonly root: string;
+
+  constructor(directory = ".orchestrator/transport-leases") {
+    this.root = resolve(directory);
+  }
+
+  async load(bindingId: string): Promise<TransportLease | undefined> {
+    assertSafeLeaseIdentifier(bindingId);
+    const value = await readJson<unknown>(join(this.root, `${bindingId}.json`));
+    return value === undefined ? undefined : TransportLeaseSchema.parse(value);
+  }
+
+  async save(lease: TransportLease): Promise<void> {
+    const parsed = TransportLeaseSchema.parse(lease);
+    assertSafeLeaseIdentifier(parsed.bindingId);
+    await mkdir(this.root, { recursive: true });
+    await writeJsonAtomic(join(this.root, `${parsed.bindingId}.json`), parsed);
   }
 }
 
@@ -106,4 +130,18 @@ function isExpired(lease: TransportLease, now: Date): boolean {
 
 function assertPositiveTtl(ttlMs: number): void {
   if (!Number.isFinite(ttlMs) || ttlMs <= 0) throw new Error("Lease TTL must be positive");
+}
+
+function assertSafeLeaseIdentifier(value: string): void {
+  if (
+    value.length === 0 ||
+    value === "." ||
+    value === ".." ||
+    value.includes("/") ||
+    value.includes("\\") ||
+    value.includes(":") ||
+    value.includes("\0")
+  ) {
+    throw new Error(`Unsafe lease identifier: ${JSON.stringify(value)}`);
+  }
 }
