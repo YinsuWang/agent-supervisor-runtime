@@ -34,6 +34,7 @@ export {
 } from "./context/contracts.js";
 export { WorkspacePolicy } from "./context/workspace-policy.js";
 export { RuntimeEvidenceSource } from "./context/sources/runtime-evidence.js";
+export { evaluatePageCompatibility } from "./page-driver/compatibility.js";
 export {
   HelloPayloadSchema,
   RuntimeFrameSchema,
@@ -101,6 +102,18 @@ export type {
 } from "./context/contracts.js";
 export type { ContextBrokerOptions } from "./context/broker.js";
 export type { RuntimeEvidenceProvider } from "./context/sources/runtime-evidence.js";
+export type {
+  ChatGptPageDriver,
+  GenerationState,
+  MessageCursor,
+  PageCapabilityReport,
+  PageCompatibility,
+  PageCompatibilityStatus,
+  PageConversationIdentity,
+  PageMessage,
+  PageMessageRole,
+  SubmitReceipt,
+} from "./page-driver/contracts.js";
 export type { HelloPayload, RuntimeFrame, RuntimeFrameType, WelcomePayload } from "./runtime/contracts.js";
 export type { RuntimeCommandHandler, RuntimeDaemonOptions } from "./runtime/daemon.js";
 export type { RuntimeIpcClient, RuntimeIpcConnection, RuntimeIpcServer } from "./runtime/ipc.js";

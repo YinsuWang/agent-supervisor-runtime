@@ -17,6 +17,7 @@
     "build:extension": "node scripts/build-extension.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p extension/tsconfig.json --noEmit",
     "test": "vitest",
+    "test:browser": "vitest --run test/browser",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -27,6 +28,7 @@
     "@types/chrome": "^0.0.287",
     "@types/node": "^22.10.0",
     "esbuild": "^0.25.0",
+    "playwright": "^1.55.0",
     "typescript": "^5.7.2",
     "vitest": "^4.1.11"
   },

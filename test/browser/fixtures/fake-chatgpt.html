@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fake ChatGPT</title>
+</head>
+<body>
+  <main
+    id="conversation-root"
+    data-conversation-id="fake-conversation"
+    data-conversation-url="https://chatgpt.com/c/fake-conversation"
+  >
+    <section id="messages" aria-label="Conversation messages"></section>
+    <div id="composer" role="textbox" aria-label="Message ChatGPT" contenteditable="true"></div>
+    <button id="send" type="button" aria-label="Send message">Send</button>
+    <button id="stop" type="button" aria-label="Stop generating" hidden>Stop</button>
+    <button id="break-capability" type="button">Break composer capability</button>
+  </main>
+  <script>
+    (() => {
+      const root = document.querySelector('#conversation-root');
+      const messages = document.querySelector('#messages');
+      const composer = document.querySelector('#composer');
+      const send = document.querySelector('#send');
+      const stop = document.querySelector('#stop');
+      const breaker = document.querySelector('#break-capability');
+      let sequence = 0;
+      let generationToken = 0;
+
+      function appendMessage(role, content) {
+        sequence += 1;
+        const article = document.createElement('article');
+        article.dataset.messageAuthorRole = role;
+        article.dataset.messageId = `${role}-${sequence}`;
+        article.setAttribute('aria-label', `${role} message`);
+        article.textContent = content;
+        messages.append(article);
+        return article;
+      }
+
+      send.addEventListener('click', () => {
+        const text = composer.textContent.trim();
+        if (!text) return;
+        appendMessage('user', text);
+        composer.textContent = '';
+
+        const token = ++generationToken;
+        const assistant = appendMessage('assistant', '');
+        stop.hidden = false;
+        const chunks = ['Fake ', 'assistant ', 'response'];
+        let index = 0;
+        const emit = () => {
+          if (token !== generationToken) return;
+          assistant.textContent += chunks[index++];
+          if (index < chunks.length) {
+            setTimeout(emit, 15);
+          } else {
+            stop.hidden = true;
+          }
+        };
+        setTimeout(emit, 15);
+      });
+
+      stop.addEventListener('click', () => {
+        generationToken += 1;
+        stop.hidden = true;
+      });
+
+      breaker.addEventListener('click', () => {
+        composer.removeAttribute('contenteditable');
+        composer.removeAttribute('aria-label');
+      });
+
+      root.dataset.fixtureReady = 'true';
+    })();
+  </script>
+</body>
+</html>
