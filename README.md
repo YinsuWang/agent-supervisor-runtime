@@ -37,16 +37,18 @@ No ChatGPT Work, Full MCP, Desktop UI automation, mandatory GitHub, Codex App Se
 ```bash
 git clone https://github.com/YinsuWang/agent-supervisor-runtime.git
 cd agent-supervisor-runtime
-npm install
+npm ci
 npm run build
 ```
+
+Until the package is published to npm, either invoke the built CLI with `node dist/cli/index.js` or run `npm link` once to expose the `orchestrator` command on your PATH.
 
 ## Zero-Codex demo
 
 The demo uses the real orchestration core and `CodexExecWorker` process wrapper, but injects Node as the command so it consumes no Codex quota.
 
 ```bash
-npm install
+npm ci
 npm run build
 node dist/cli/index.js --config examples/mock-review-loop/orchestrator.config.json run examples/mock-review-loop/task.json
 node dist/cli/index.js --config examples/mock-review-loop/orchestrator.config.json status DEMO-REVIEW
@@ -74,7 +76,7 @@ The generated config uses:
 }
 ```
 
-Add a mock review script while the Desktop adapter is not yet implemented, then run:
+Add a mock review script while the Desktop adapter is not yet implemented. If you ran `npm link`, you can use the short CLI commands:
 
 ```bash
 orchestrator doctor
@@ -82,6 +84,8 @@ orchestrator run path/to/task.json
 orchestrator status TASK-ID
 orchestrator resume TASK-ID
 ```
+
+Otherwise use `node /path/to/agent-supervisor-runtime/dist/cli/index.js` in place of `orchestrator`.
 
 ## Durable state
 
@@ -98,7 +102,7 @@ See [docs/adapters.md](docs/adapters.md). V0.2's key extension is a ChatGPT Desk
 ## Development
 
 ```bash
-npm install
+npm ci
 npm run typecheck
 npm test -- --run
 npm run build
