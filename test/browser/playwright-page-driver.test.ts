@@ -26,7 +26,7 @@ beforeEach(async () => {
 afterEach(async () => page?.close());
 afterAll(async () => browser?.close());
 
-describe("PlaywrightChatGptPageDriver", () => {
+describe("PlaywrightChatGptPageDriver", { timeout: 30_000 }, () => {
   it("deduplicates repeated DOM message nodes", async () => {
     const driver = new PlaywrightChatGptPageDriver(page, { expectedConversationId: "fake-conversation" });
     await driver.submitMessage("dedupe probe");

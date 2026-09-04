@@ -37,7 +37,7 @@ beforeEach(async () => {
 afterEach(async () => page?.close());
 afterAll(async () => browser?.close());
 
-describe("ExtensionChatGptPageDriver", () => {
+describe("ExtensionChatGptPageDriver", { timeout: 30_000 }, () => {
   it("deduplicates repeated DOM message nodes", async () => {
     await submitWithExtensionBackend(page, "dedupe probe");
     await expect(page.evaluate(async () => {

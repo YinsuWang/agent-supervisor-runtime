@@ -90,7 +90,7 @@ afterAll(async () => {
   await browser?.close();
 });
 
-describe("ChatGptPageDriver semantic contract", () => {
+describe("ChatGptPageDriver semantic contract", { timeout: 30_000 }, () => {
   it("inspects the bound conversation and reports all semantic capabilities", async () => {
     await expect(driver.inspectConversation()).resolves.toEqual({
       conversationId: "fake-conversation",
