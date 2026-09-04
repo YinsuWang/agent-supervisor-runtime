@@ -74,7 +74,7 @@ describe("V0.2 durable supervisor end-to-end", () => {
     const messages = await runtime.store.listMessageRecords();
     expect(messages).toHaveLength(6);
     expect(messages.every((entry) => entry.state === "CONSUMED")).toBe(true);
-  });
+  }, 15_000);
 });
 
 const binding: ConversationBinding = {

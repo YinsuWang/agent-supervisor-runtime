@@ -67,9 +67,19 @@ npm run test:chatgpt-spike
 npm run test:chatgpt-persistence
 npm run test:chatgpt-driver-smoke
 npm run test:companion-session
+npm run test:chatgpt-desktop-latency
 ```
 
 The login and persistence helpers are manual-only and remain excluded from `npm test` and CI.
+
+`test:chatgpt-desktop-latency` sends one fixed Web probe, asks the operator to confirm Desktop visibility at 5-second checkpoints for up to 2 minutes, and records only the measured timing and whether reopening was required. It does not inspect or persist conversation content, identifiers, credentials, cookies, or screenshots.
+
+### Task 17 follow-up measurement (2026-09-04)
+
+- Environment: Windows 11 build 26100, Chrome 152.0.7977.76, Node 24.16.0.
+- The Web probe and correlated assistant response were observed successfully.
+- The operator confirmed both probe messages at the first `+5,013 ms` checkpoint; reopening Desktop was not required.
+- This is a discrete operator-confirmed observation window with 5-second sampling resolution. The terminal confirmation arrived later, so that input-arrival time is retained only as diagnostic metadata and is not reported as synchronization latency.
 
 ## Task 13 production page-driver smoke
 

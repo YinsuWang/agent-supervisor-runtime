@@ -27,5 +27,7 @@ jobs:
         run: npm run test:ci:windows
       - name: Build
         run: npm run build
+      - name: Verify packed npm package
+        run: npm run test:package
       - name: Smoke release native host
         run: npm run test:release-artifact

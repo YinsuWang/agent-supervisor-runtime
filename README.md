@@ -38,6 +38,8 @@ Then:
 
 See [Windows V0.2 setup](docs/setup/windows-v0.2.md) for installation, validation, and removal details.
 
+The npm package intentionally excludes the large Windows Native Messaging Host executable. For a release install, download the matching `agent-supervisor-runtime-host-v<version>-win-x64.exe` from the GitHub Release and pass its path to `orchestrator setup`. A source checkout can continue to use the executable produced by `npm run build`.
+
 ## Runtime behavior
 
 - V0.1 task states remain authoritative for work semantics.
@@ -78,6 +80,7 @@ npm run typecheck
 npm test -- --run
 npm run build
 npm run test:release-artifact
+npm run test:package
 npm pack --dry-run
 ```
 

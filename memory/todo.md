@@ -4,7 +4,7 @@
 
 - [x] Run `npm install`.
 - [x] Run `npm run typecheck`.
-- [x] Run `npm test -- --run` (35 files, 93 tests).
+- [x] Run `npm test -- --run` (44 files, 123 tests).
 - [x] Run `npm run build`.
 - [x] Audit and correct Task 12 probe behavior against all seven gate criteria.
 - [x] Run `npm run test:chatgpt-spike` with the dedicated profile.
@@ -17,8 +17,12 @@
 - [x] Task 14: Background Web Companion.
 - [x] Task 15: supervisor connectivity, doctor, and security hardening.
 - [x] Task 16: durable V0.2 end-to-end loop.
-- [x] Task 17: packaging, docs, CI, and release readiness. (committed/pushed `995931b`; confirm Ubuntu/Windows CI after push)
-- [ ] Task 17 follow-up: measure/document Desktop synchronization latency and conversation-reopen recovery.
+- [x] Task 17: packaging, docs, CI, and release readiness. (merged through PR #2 at `99ea916`)
+- [x] Task 17 follow-up: measure/document Desktop synchronization latency and conversation-reopen recovery (`+5,013 ms` checkpoint; no reopen required).
+- [x] Define slim npm package plus separate Windows host Release asset distribution.
+- [x] Add package clean-install smoke and package-content assertions.
+- [x] Make `package.json` the canonical version source with sync/check scripts.
+- [ ] Create and verify the `v0.2.0` GitHub Release after branch CI passes.
 
 ## Gate decision
 

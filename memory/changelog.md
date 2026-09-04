@@ -97,3 +97,14 @@
 - Documented the ChatGPT Desktop synchronization latency measurement and conversation-reopen recovery in `docs/troubleshooting/chatgpt-compatibility.md`.
 - Audit fixes: npm `files` now excludes `dist/native-host-release`, shrinking the tarball from 34.4 MB to 127.3 kB while keeping the built native-host sources; added `src/version.ts` as the single runtime version source and removed scattered `0.2.0` literals from cli/native-host/doctor.
 - Local verification passed: typecheck, 117 neutral tests, build, release-artifact smoke, npm pack dry-run.
+
+## 2026-09-04 — Release-readiness follow-up
+
+- Created `codex/v0.2-release-readiness` from merged `main` to close the two audit findings.
+- Documented the selected distribution contract: the npm package excludes the large Windows SEA host, while release staging provides the host executable and npm tarball as separate GitHub Release assets.
+- Added `test:package` for package-content and clean-install verification, `stage:release` for reproducible Windows asset staging, and CI execution of the package smoke.
+- Made `package.json` the canonical version source and added synchronization/consistency checks for the runtime constant, lockfile, and extension manifest.
+- Added a manual Desktop latency smoke. The 2026-09-04 run passed Web delivery and operator-confirmed Desktop visibility at the first `+5,013 ms` checkpoint without requiring a reopen; only timing metadata was retained.
+- Increased the timeout budget only for three slow integration tests after local parallel execution repeatedly exceeded Vitest's default 5 seconds; the full suite then passed 44 files / 123 tests.
+- Release assets staged locally: `agent-supervisor-runtime-host-v0.2.0-win-x64.exe` and `agent-supervisor-runtime-0.2.0.tgz`.
+- Next: commit/push, confirm branch CI, create the `v0.2.0` tag and GitHub Release, then update this record with the final release URLs.
