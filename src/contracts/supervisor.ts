@@ -15,6 +15,15 @@ export type SupervisorNotification = {
   message: string;
 };
 
+export class SupervisorUnavailableError extends Error {
+  readonly code = "SUPERVISOR_UNAVAILABLE";
+
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "SupervisorUnavailableError";
+  }
+}
+
 export interface SupervisorAdapter {
   readonly name: string;
   requestReview(input: ReviewRequest): Promise<unknown>;

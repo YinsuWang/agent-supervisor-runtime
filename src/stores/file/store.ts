@@ -1,10 +1,11 @@
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import type { StateStore } from "../../contracts/state-store.js";
 import { TaskSchema, type Task } from "../../contracts/task.js";
 import { TaskRecordSchema, type OrchestratorEvent, type TaskRecord } from "../../contracts/state.js";
 import { WorkerResultSchema, type WorkerResult } from "../../contracts/result.js";
 import { ReviewSchema, type Review } from "../../contracts/review.js";
+import { MessageLedgerEntrySchema, type MessageLedgerEntry } from "../../conversations/message-ledger.js";
 import { readJson, writeJsonAtomic } from "../../utils/json.js";
 
 type StateFile = { tasks: Record<string, TaskRecord> };
@@ -19,6 +20,7 @@ export class FileStateStore implements StateStore {
   async initialize(projectId: string): Promise<void> {
     await mkdir(join(this.root, "tasks"), { recursive: true });
     await mkdir(join(this.root, "runs"), { recursive: true });
+    await mkdir(join(this.root, "messages"), { recursive: true });
     await writeIfMissing(join(this.root, "project.json"), { projectId, version: 1 });
     await writeIfMissing(join(this.root, "state.json"), { tasks: {} });
   }
@@ -96,6 +98,40 @@ export class FileStateStore implements StateStore {
   async appendEvent(runId: string, event: OrchestratorEvent): Promise<void> {
     const dir = await this.getRunDirectory(runId);
     await appendFile(join(dir, "events.jsonl"), `${JSON.stringify(event)}\n`, "utf8");
+  }
+
+  async saveMessageRecord(record: MessageLedgerEntry): Promise<void> {
+    assertSafeStateIdentifier(record.messageId);
+    await mkdir(join(this.root, "messages"), { recursive: true });
+    await writeJsonAtomic(
+      join(this.root, "messages", `${record.messageId}.json`),
+      MessageLedgerEntrySchema.parse(record),
+    );
+  }
+
+  async loadMessageRecord(messageId: string): Promise<MessageLedgerEntry | undefined> {
+    assertSafeStateIdentifier(messageId);
+    const value = await readJson<unknown>(join(this.root, "messages", `${messageId}.json`));
+    return value === undefined ? undefined : MessageLedgerEntrySchema.parse(value);
+  }
+
+  async listMessageRecords(): Promise<MessageLedgerEntry[]> {
+    let names: string[];
+    try {
+      names = await readdir(join(this.root, "messages"));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+      throw error;
+    }
+
+    const records: MessageLedgerEntry[] = [];
+    for (const name of names.filter((value) => value.endsWith(".json")).sort()) {
+      const messageId = name.slice(0, -".json".length);
+      assertSafeStateIdentifier(messageId);
+      const record = await this.loadMessageRecord(messageId);
+      if (record) records.push(record);
+    }
+    return records;
   }
 }
 

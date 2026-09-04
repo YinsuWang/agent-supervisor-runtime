@@ -3,6 +3,8 @@ import { constants } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { loadConfig } from "../../config/loader.js";
+import { defaultRuntimeHome } from "../../runtime/daemon.js";
+import { runSupervisorDoctor } from "../../setup/doctor.js";
 
 export type DoctorCheck = { name: string; ok: boolean; detail: string };
 
@@ -24,6 +26,11 @@ export async function doctorCommand(configPath = "orchestrator.config.json"): Pr
   }
 
   for (const check of checks) console.log(`${check.ok ? "OK" : "FAIL"} ${check.name}: ${check.detail}`);
+  const supervisorChecks = await runSupervisorDoctor({ runtimeHome: defaultRuntimeHome() });
+  for (const check of supervisorChecks) {
+    console.log(`${check.ok ? "OK" : "FAIL"} ${check.name} [${check.state}]: ${check.detail}`);
+    checks.push({ name: check.name, ok: check.ok, detail: `${check.state}: ${check.detail}` });
+  }
   return checks;
 }
 

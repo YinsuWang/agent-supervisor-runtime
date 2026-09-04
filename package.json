@@ -1,11 +1,20 @@
 {
   "name": "agent-supervisor-runtime",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A local supervisor runtime for durable supervisor-worker agent delegation.",
   "type": "module",
   "bin": {
     "orchestrator": "./dist/cli/index.js"
   },
+  "files": [
+    "dist",
+    "!dist/native-host-release",
+    "extension/dist",
+    "extension/manifest.json",
+    "extension/popup.html",
+    "README.md",
+    "LICENSE"
+  ],
   "exports": {
     ".": "./dist/index.js"
   },
@@ -13,9 +22,21 @@
     "node": ">=20.19"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json && npm run build:extension && npm run build:native-host",
+    "build:all": "npm run build",
+    "build:extension": "node scripts/build-extension.mjs",
+    "build:native-host": "node scripts/build-native-host.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p extension/tsconfig.json --noEmit",
     "test": "vitest",
+    "test:browser": "vitest --run test/browser",
+    "test:chatgpt-login": "tsx test/manual/chatgpt-login-bootstrap.ts",
+    "test:companion-session": "tsx test/manual/companion-session-smoke.ts",
+    "test:chatgpt-driver-smoke": "tsx test/manual/chatgpt-page-driver-smoke.ts",
+    "test:chatgpt-persistence": "tsx test/manual/chatgpt-session-persistence.ts",
+    "test:chatgpt-spike": "tsx test/manual/chatgpt-feasibility.ts",
+    "test:ci:neutral": "vitest --run --exclude test/integration/named-pipe.test.ts --exclude test/integration/native-host-runtime.test.ts --exclude test/integration/setup-windows.test.ts",
+    "test:ci:windows": "vitest --run test/integration/named-pipe.test.ts test/integration/native-host-runtime.test.ts test/integration/setup-windows.test.ts",
+    "test:release-artifact": "node scripts/smoke-native-host.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -23,7 +44,12 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/chrome": "^0.0.287",
     "@types/node": "^22.10.0",
+    "esbuild": "^0.25.0",
+    "playwright": "^1.55.0",
+    "postject": "^1.0.0-alpha.6",
+    "tsx": "^4.20.0",
     "typescript": "^5.7.2",
     "vitest": "^4.1.11"
   },

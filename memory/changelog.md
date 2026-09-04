@@ -1,0 +1,99 @@
+# Changelog
+
+## 2026-09-04 — Context recovery
+
+- Goal: resume V0.2 from Task 12 on `feat/v0.2-chatgpt-transport`.
+- Verified local/remote HEAD: `ac4a2678ba3953f53d8891db94cd40d63ed8712e`.
+- Verified PR #2 is open and Draft; checkpoint CI succeeded on Ubuntu and Windows.
+- Read the approved V0.2 design, implementation plan, architecture direction, README, Task 12 probe, report, and package scripts.
+- Decision: preserve the Task 12 hard gate and do not begin Task 13 without seven live PASS results.
+- Next: run local automated verification and the manual live spike.
+
+## 2026-09-04 — Task 12 live feasibility gate
+
+- Automated verification passed: typecheck, 35 Vitest files / 93 tests, and build including the Chrome extension bundle.
+- Improved the manual spike so response correlation, background observation, streaming lifecycle, conversation materialization, and persistent-login checks measure the required semantics rather than DOM existence alone.
+- Added an ordinary-Chrome manual-login bootstrap because account login inside the Playwright-launched browser triggered browser-safety, HTTP 400, and repeated human-verification failures.
+- Verified the dedicated Playwright profile can close and reopen the same authenticated `/c/<id>` conversation without another login.
+- Live result: conversation identity, composer/submit, background send/observe, streaming completion, assistant response reading, and persistent login passed.
+- Material failure: repeat-run messages visible in Web were absent from the confirmed Desktop Chat view. An earlier successful observation was not repeatable.
+- Decision: mark Task 12 FAIL, keep Tasks 13-17 blocked, document architecture-review alternatives, and avoid prohibited UI/OCR/credential workarounds.
+- Pre-commit verification reproduced a page-driver fixture race: three 15 ms timers could finish before the submit call returned. Replaced timer-driven fake streaming with explicit test-controlled chunk/complete transitions; the focused contract passed 10/10 repetitions without increasing sleeps or timeouts.
+- Final verification passed: typecheck, 35 test files / 93 tests, build, and `git diff --check` (line-ending notices only).
+
+## 2026-09-04 — Task 12 gate resolution
+
+- The operator reopened the same Desktop Chat conversation and confirmed both repeat-run Web probe messages were present.
+- Reclassified criterion 7 from apparent failure to PASS with synchronization latency; the shared cloud conversation anchor is feasible, but Desktop visibility is not immediate.
+- Decision: Task 12 hard gate passes, the approved Web + Desktop architecture remains unchanged, and Task 13 may begin.
+- Follow-up: measure and document Desktop synchronization latency during Task 17 release readiness; runtime correctness must remain based on Web transport observations and durable state.
+
+## 2026-09-04 — Task 13 production semantic page drivers
+
+- Implemented shared ChatGPT semantic compatibility profile plus production Chrome-extension and Playwright page-driver backends.
+- Added fail-closed conversation identity checks, semantic composer submission, message observation/deduplication, cursor validation, and `IDLE` / `GENERATING` / `INTERRUPTED` / `ERROR` lifecycle detection.
+- Extended the narrow extension protocol for page-driver inspection, submission, observation, generation state, and health without adding a general execution surface.
+- Added deterministic browser coverage for duplicate mutations, interrupted/retry states, wrong-conversation rejection, and asynchronously rendered send controls.
+- Live smoke passed on Chrome 152.0.7977.65, Playwright 1.62.1, Node v24.16.0, and Windows 10.0.26100: both backends matched identity, extension submission was observed, generation transitioned to idle, and the correlated assistant reply was readable.
+- Review hardening: all state-bearing protocol operations require an expected conversation ID and re-check it before accessing page state.
+- Verification before checkpoint passed: typecheck, 37 Vitest files / 101 tests, extension build, and package build.
+- First remote CI run passed Windows but Ubuntu timed out while three browser suites launched Chrome concurrently under Vitest's 10-second default hook timeout; no test assertion failed.
+- Raised only the browser-startup hook ceiling to 30 seconds and made browser cleanup tolerant of partial setup. Business timing and pass/fail assertions remain unchanged.
+- Follow-up checkpoint `c49ef34` passed CI on Ubuntu and Windows in run `33831460444`.
+- Decision: Task 13 is complete; begin Task 14 Background Web Companion.
+
+## 2026-09-04 — Task 14 Background Web Companion
+
+- Added a dedicated companion profile resolver that rejects project-state and default-Chrome profile overlap.
+- Added `orchestrator companion login` using ordinary Chrome and `orchestrator companion reset` scoped to the resolved ASR-owned profile.
+- Implemented `BackgroundWebTransport` over the production Playwright page driver with explicit binding checks, lease fencing/renewal, standby behavior, correlated response observation, and `AUTH_REQUIRED` / `INCOMPATIBLE` details.
+- Added one-way DRAINING behavior so periodic reconnects cannot cancel a higher-priority Chrome handback request during an in-flight exchange.
+- Integration coverage passed for Chrome ACTIVE -> expiry -> Background epoch+1 ACTIVE -> Chrome return -> drain -> safe handback, plus profile isolation, login/reset lifecycle, auth expiry, and lease renewal.
+- Manual production smoke passed: ordinary-Chrome login completed, then minimized headful Playwright reused the same dedicated profile and found an authenticated composer without sending a message. Headless reuse did not expose the composer and remains unsupported in this environment.
+- Final local verification passed: typecheck, 39 Vitest files / 106 tests, build, and companion CLI help.
+- Next: commit/push Task 14, confirm Ubuntu/Windows CI, then begin Task 15.
+
+## 2026-09-04 — Task 15 Supervisor connectivity, doctor, and security hardening
+
+- Confirmed Task 14 checkpoint `921b8f5` passed CI on Ubuntu and Windows in run `33832514063`.
+- Added the eight-state supervisor connectivity model while keeping V0.1 task state unchanged across browser, login, DOM, native-host, and runtime-restart events.
+- Added doctor probes for runtime IPC handshake, exact HKCU native-host registration, persisted extension protocol handshake, companion profile readiness, and semantic page-driver capabilities.
+- The runtime now records non-secret extension handshake health metadata; an unavailable live page probe is reported as degraded rather than incorrectly inferred as expired authentication.
+- Hardened the Native Host boundary with a strict `BIND_CONVERSATION` command schema and exact ChatGPT conversation identity validation.
+- Added consolidated security coverage for shell-command rejection, lexical and symlink workspace escape, wrong conversation identity, and stale lease fencing.
+- Final local verification passed: typecheck, 42 Vitest files / 120 tests, build, and a read-only production doctor smoke.
+- Next: commit/push Task 15, confirm Ubuntu/Windows CI, then begin Task 16.
+
+## 2026-09-04 — Task 15 CI follow-up and Task 16 durable supervisor loop
+
+- Task 15 CI run `33833369175` passed Ubuntu. On Windows, two browser-fixture tests completed their operations after Vitest's 5-second per-test default under a heavily delayed runner; all non-browser Task 15 tests passed.
+- Follow-up `b7cb79b` raises only the three browser-fixture suite ceilings to 30 seconds; local typecheck and all 10 browser tests passed.
+- Added `buildConversationRuntime` as the production wiring entry for a real file store, message ledger, ChatGPT supervisor adapter, Context Broker, worker, and Orchestrator.
+- Added a deterministic full V0.2 flow covering review packet, on-demand context, `REVISE`, a second worker run, `PASS`, and durable completion.
+- Added restart coverage from persisted `RESULT_READY` plus `SENT`, proving the worker is not rerun, the request is not resent, a repeated resume is idempotent, duplicate observations are ignored, and wrong-binding observations cannot correlate.
+- Restart testing exposed sequence reuse after process reconstruction. Default ASR sequence allocation now continues from the maximum persisted binding sequence; injected deterministic generators remain supported.
+- Final local verification passed: typecheck, 44 Vitest files / 123 tests, build, and diff check.
+- Next: commit/push Task 16, confirm Ubuntu/Windows CI, then begin Task 17.
+
+## 2026-09-04 — Task 17 packaging and release readiness
+
+- Committed and pushed Task 17 as two commits on `feat/v0.2-chatgpt-transport`: `6649bbb` (build: native host SEA packaging, split CI suites, release-artifact smoke) and `995931b` (docs: V0.2 protocol, Windows setup, ChatGPT troubleshooting).
+- SEA native-host packaging verified empirically: a minimal SEA probe confirmed `process.argv[1] === process.execPath` at runtime, so the `packaged` branch that self-bootstraps `--asr-daemon` is reliable.
+- Local verification passed: typecheck; `test:ci:neutral` 117 tests (2 flaky-timeout cases passed on rerun with a longer ceiling); `test:ci:windows` 6 tests; `test:release-artifact` (exe self-test reports ASR-NM/1, version 0.2.0); full `npm run build`; `npm pack --dry-run` (148 files / 34.4 MB).
+- Audit findings recorded, not blocking: `files` ships the 87 MB Windows host exe; version strings duplicated across cli/native-host/doctor/manifest.
+- Environment incident: loose refs under `.git/refs/heads` were deleted by external file activity (likely cloud sync of the Documents folder), which made the second commit appear as a root commit. Repaired by repacking refs into `.git/packed-refs`; remote confirmed at `995931b`. If this recurs, keep refs packed or move the repo outside the synced folder.
+- Next: confirm Ubuntu/Windows CI for `995931b`, then address the Task 17 follow-up (Desktop latency documentation) and plan PR #2 review/merge.
+
+## 2026-09-04 — Task 17 CI confirmed
+
+- CI run #60 (`33839154284`) for `350fc57` on PR #2 passed on both Ubuntu and Windows.
+- Ubuntu: typecheck, neutral suite, build, release-artifact smoke all success (Windows-only step correctly skipped).
+- Windows: neutral suite, Windows runtime/setup integrations (named-pipe, native-host-runtime, setup-windows), build, and release-artifact smoke all success.
+- Next: PR #2 review/merge planning; Task 17 follow-up (Desktop latency documentation) remains open.
+
+## 2026-09-04 — Task 17 follow-up and audit improvements
+
+- Added PR #2 review: all 17 tasks verified implemented (files/commits/CI), plan checkboxes synced, PR moved from Draft to Ready for review, description updated. CI run #61 passed on Ubuntu and Windows (one Windows rerun needed for a browser-fixture hook timeout caused by runner load, not code).
+- Documented the ChatGPT Desktop synchronization latency measurement and conversation-reopen recovery in `docs/troubleshooting/chatgpt-compatibility.md`.
+- Audit fixes: npm `files` now excludes `dist/native-host-release`, shrinking the tarball from 34.4 MB to 127.3 kB while keeping the built native-host sources; added `src/version.ts` as the single runtime version source and removed scattered `0.2.0` literals from cli/native-host/doctor.
+- Local verification passed: typecheck, 117 neutral tests, build, release-artifact smoke, npm pack dry-run.
