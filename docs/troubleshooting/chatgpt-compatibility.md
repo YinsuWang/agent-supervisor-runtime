@@ -51,6 +51,27 @@ Doctor and the page driver report missing semantic capabilities such as `convers
 
 The same cloud conversation can render later in ChatGPT Desktop than on the web. During the V0.2 feasibility gate, delayed messages appeared after reopening the Desktop conversation. Treat this as synchronization latency: verify the exact conversation ID and reopen the conversation before concluding that a message was lost. Runtime correctness does not assume immediate Desktop rendering.
 
+### Measured behavior (V0.2 feasibility gate, 2026-09-04)
+
+- Environment: Windows 11 build 26100, Chrome 152, Playwright 1.62.1, Node 24.16.0.
+- First probe round: Web submission appeared in Desktop without a reopen.
+- Repeat probe round: the same cloud conversation initially did not show the new messages in Desktop; they became visible only after the Desktop conversation was reopened.
+- The delay did not indicate data loss: after reopen, both the user probe and the assistant reply were present in the shared conversation.
+
+Because the probe intentionally avoided reading account identifiers or private content, the local evidence cannot distinguish network latency, client cache/session state, or service propagation as the cause. It is consistent with the documented behavior that chats created in Chat sync between Web and Desktop, with added synchronization latency in this environment.
+
+### Troubleshooting steps
+
+1. Confirm the Desktop conversation ID equals the bound Web conversation ID (`chatgpt.com/c/<id>`).
+2. Reopen the Desktop conversation and wait for the message list to refresh.
+3. Re-run `orchestrator doctor`; a healthy `ACTIVE`/`STANDBY` connectivity state with a matching conversation identity means runtime delivery is not the cause.
+4. Do not resend manually while the state is `RECONCILING`; the durable ledger reconciles observed messages before any retry.
+5. If messages still do not appear after reopening, check whether the conversation is a Temporary Chat; unsaved Temporary Chats are not part of the shared history that Web and Desktop sync.
+
+### How to measure the observation window in a future manual smoke
+
+Run a manual Web submission against the bound conversation, then poll the Desktop conversation at fixed intervals (for example every 5 seconds) until the correlated assistant message is observed, up to a bounded window (for example 2 minutes). Record only the interval at which the message first appeared, never message contents. Report the measured window in the compatibility report. Runtime correctness must not assume immediate Desktop rendering regardless of the measured value.
+
 ## Safe diagnostics
 
 Doctor output contains protocol versions, capability names, paths, and non-secret health state. It must not contain ChatGPT passwords, cookies, tokens, or conversation message contents. Real ChatGPT smoke tests remain manual and outside CI.
