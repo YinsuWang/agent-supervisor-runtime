@@ -3,8 +3,8 @@
 ## Repository
 
 - GitHub: `YinsuWang/agent-supervisor-runtime`
-- Active development branch: `feat/v0.2-chatgpt-transport`
-- Goal: complete V0.2 ChatGPT Conversation Transport while preserving the approved architecture and security boundaries.
+- Active branch: `main` (`v0.2.0` released)
+- Goal: maintain the V0.2 ChatGPT Conversation Transport while preserving the approved architecture and security boundaries.
 
 ## Authoritative sources
 

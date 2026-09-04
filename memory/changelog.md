@@ -108,3 +108,10 @@
 - Increased the timeout budget only for three slow integration tests after local parallel execution repeatedly exceeded Vitest's default 5 seconds; the full suite then passed 44 files / 123 tests.
 - Release assets staged locally: `agent-supervisor-runtime-host-v0.2.0-win-x64.exe` and `agent-supervisor-runtime-0.2.0.tgz`.
 - Next: commit/push, confirm branch CI, create the `v0.2.0` tag and GitHub Release, then update this record with the final release URLs.
+
+## 2026-09-04 — v0.2.0 release completed
+
+- Release-readiness PR #3 (`8607f0a`) was merged into `main` as `0e82a981c24674cdbf893d88d322c389b5a52b84`; main CI #66 (`33855067863`) passed on Ubuntu and Windows.
+- Created and pushed annotated tag `v0.2.0` and published the GitHub Release: https://github.com/YinsuWang/agent-supervisor-runtime/releases/tag/v0.2.0.
+- Published npm tarball `agent-supervisor-runtime-0.2.0.tgz` (127,468 bytes) and Windows x64 host `agent-supervisor-runtime-host-v0.2.0-win-x64.exe` (92,547,072 bytes). GitHub asset digests match local SHA256 values: `886607AD5769B595C6ED8C3D2D62E0089C3C60A9DF91D9278BF5E83F36C3EFE2` and `57E1F71F7EFF1E4F1E10C32EAE4F9FBC75DBE83DCCD333C1CCA669824603CA2B`.
+- Final status: Task 1–17 and Task 17 Desktop follow-up are complete; no open todo remains. Continue with post-release monitoring on `main`.

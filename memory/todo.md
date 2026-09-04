@@ -22,7 +22,11 @@
 - [x] Define slim npm package plus separate Windows host Release asset distribution.
 - [x] Add package clean-install smoke and package-content assertions.
 - [x] Make `package.json` the canonical version source with sync/check scripts.
-- [ ] Create and verify the `v0.2.0` GitHub Release after branch CI passes.
+- [x] Create and verify the `v0.2.0` GitHub Release after main CI passes; both assets are published and their GitHub SHA256 digests match the staged files.
+
+## Post-release
+
+- No open implementation or release-readiness tasks.
 
 ## Gate decision
 
