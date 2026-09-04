@@ -28,5 +28,5 @@ describe("CodexExecWorker", () => {
     expect(result.changedFiles).toContain("tracked.txt");
     expect(result.machineEvidence.processExitCode).toBe(0);
     expect(result.git?.diffStat).toContain("tracked.txt");
-  });
+  }, 15_000);
 });

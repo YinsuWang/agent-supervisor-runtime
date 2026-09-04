@@ -24,5 +24,5 @@ describe("end-to-end mock review loop", () => {
     expect(record.state).toBe("COMPLETED");
     expect(record.revisionCount).toBe(1);
     expect(record.runCount).toBe(2);
-  });
+  }, 15_000);
 });

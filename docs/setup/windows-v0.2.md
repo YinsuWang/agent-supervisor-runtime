@@ -31,6 +31,8 @@ orchestrator init
 - `dist/native-host-release/agent-supervisor-runtime-host.exe` — self-contained Windows Host;
 - `dist/native-host-release/agent-supervisor-runtime-host.cjs` — portable bundled source used to build the Host.
 
+The published npm package intentionally excludes `dist/native-host-release` so that the package remains small. For a release install, download the matching `agent-supervisor-runtime-host-v<version>-win-x64.exe` asset from the [GitHub Releases page](https://github.com/YinsuWang/agent-supervisor-runtime/releases), and use that downloaded file as `--host-path`. The npm package supplies the CLI and extension files; it is not a complete Windows Native Messaging installation by itself.
+
 Verify the executable independently of the source tree:
 
 ```powershell
@@ -46,6 +48,8 @@ orchestrator setup `
   --extension-id nnolaedbmhibcffbjopphajjkbcnflln `
   --host-path "$PWD\dist\native-host-release\agent-supervisor-runtime-host.exe"
 ```
+
+The command above is for a source checkout. With a release asset, replace the host path with the downloaded `agent-supervisor-runtime-host-v<version>-win-x64.exe` path.
 
 This writes the Host manifest under `%LOCALAPPDATA%\AgentSupervisorRuntime\native-host` and registers its exact path under:
 

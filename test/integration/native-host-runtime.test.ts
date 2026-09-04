@@ -8,6 +8,7 @@ import { RuntimeDaemon } from "../../src/runtime/daemon.js";
 import { NamedPipeIpcClient, runtimeEndpointForHome } from "../../src/runtime/named-pipe.js";
 import { NativeHostBridge } from "../../src/native-host/bridge.js";
 import { NativeMessageDecoder, encodeNativeMessage } from "../../src/native-host/framing.js";
+import { ASR_VERSION } from "../../src/version.js";
 
 const tempDirs: string[] = [];
 afterEach(async () => Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true }))));
@@ -60,14 +61,14 @@ describe("native host runtime bridge", () => {
       await bridge.start();
       input.write(encodeNativeMessage(frame("frame_hello", "HELLO", {
         extensionInstanceId: "extinst_test",
-        extensionVersion: "0.2.0",
+        extensionVersion: ASR_VERSION,
         capabilities: ["conversation-send"],
       })));
       const welcome = await waitFor("WELCOME");
       expect(starts).toBe(1);
       expect(welcome.payload).toMatchObject({ runtimeInstanceId: "runtime_test", status: "READY" });
       expect(JSON.parse(await readFile(join(runtimeHome, "health", "extension-session.json"), "utf8")))
-        .toMatchObject({ protocol: "ASR-NM/1", extensionVersion: "0.2.0", runtimeInstanceId: "runtime_test" });
+        .toMatchObject({ protocol: "ASR-NM/1", extensionVersion: ASR_VERSION, runtimeInstanceId: "runtime_test" });
 
       input.write(encodeNativeMessage(frame("frame_command", "COMMAND", {
         name: "BIND_CONVERSATION",
