@@ -17,7 +17,7 @@
 - [x] Task 14: Background Web Companion.
 - [x] Task 15: supervisor connectivity, doctor, and security hardening.
 - [x] Task 16: durable V0.2 end-to-end loop.
-- [ ] Task 17: packaging, docs, CI, and release readiness. (next)
+- [x] Task 17: packaging, docs, CI, and release readiness. (committed/pushed `995931b`; confirm Ubuntu/Windows CI after push)
 - [ ] Task 17 follow-up: measure/document Desktop synchronization latency and conversation-reopen recovery.
 
 ## Gate decision

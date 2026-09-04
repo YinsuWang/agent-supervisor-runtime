@@ -74,3 +74,12 @@
 - Restart testing exposed sequence reuse after process reconstruction. Default ASR sequence allocation now continues from the maximum persisted binding sequence; injected deterministic generators remain supported.
 - Final local verification passed: typecheck, 44 Vitest files / 123 tests, build, and diff check.
 - Next: commit/push Task 16, confirm Ubuntu/Windows CI, then begin Task 17.
+
+## 2026-09-04 — Task 17 packaging and release readiness
+
+- Committed and pushed Task 17 as two commits on `feat/v0.2-chatgpt-transport`: `6649bbb` (build: native host SEA packaging, split CI suites, release-artifact smoke) and `995931b` (docs: V0.2 protocol, Windows setup, ChatGPT troubleshooting).
+- SEA native-host packaging verified empirically: a minimal SEA probe confirmed `process.argv[1] === process.execPath` at runtime, so the `packaged` branch that self-bootstraps `--asr-daemon` is reliable.
+- Local verification passed: typecheck; `test:ci:neutral` 117 tests (2 flaky-timeout cases passed on rerun with a longer ceiling); `test:ci:windows` 6 tests; `test:release-artifact` (exe self-test reports ASR-NM/1, version 0.2.0); full `npm run build`; `npm pack --dry-run` (148 files / 34.4 MB).
+- Audit findings recorded, not blocking: `files` ships the 87 MB Windows host exe; version strings duplicated across cli/native-host/doctor/manifest.
+- Environment incident: loose refs under `.git/refs/heads` were deleted by external file activity (likely cloud sync of the Documents folder), which made the second commit appear as a root commit. Repaired by repacking refs into `.git/packed-refs`; remote confirmed at `995931b`. If this recurs, keep refs packed or move the repo outside the synced folder.
+- Next: confirm Ubuntu/Windows CI for `995931b`, then address the Task 17 follow-up (Desktop latency documentation) and plan PR #2 review/merge.

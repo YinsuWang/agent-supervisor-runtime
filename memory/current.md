@@ -2,16 +2,14 @@
 
 Updated: 2026-09-04 (Asia/Shanghai)
 
-- Local clone is on `feat/v0.2-chatgpt-transport`; Task 14 checkpoint `921b8f5` is pushed.
-- Task 13 checkpoints `706f5f8` and `c49ef34` are pushed. Final CI run `33831460444` passed on Ubuntu and Windows.
-- Task 14 Background Web Companion is complete. CI run `33832514063` passed on Ubuntu and Windows.
-- Task 15 supervisor connectivity, doctor, and security hardening is complete in `611b0c8`.
-- Task 15 CI run `33833369175` passed Ubuntu; Windows exposed two overloaded browser-fixture tests exceeding Vitest's 5-second default. Follow-up `b7cb79b` scopes a 30-second ceiling to the three browser-fixture suites and is awaiting CI.
-- Task 16 durable V0.2 end-to-end loop is locally complete and awaiting checkpoint commit/CI.
+- Local clone is on `feat/v0.2-chatgpt-transport`; Task 17 packaging/release work is committed and pushed at `995931b`.
+- Task 17 (packaging and release readiness) implementation is complete: SEA native-host packaging, release-artifact smoke, split neutral/Windows CI suites, README V0.2 rewrite, and docs (`docs/protocols/asr-1.md`, `docs/protocols/asr-nm-1.md`, `docs/setup/windows-v0.2.md`, `docs/troubleshooting/chatgpt-compatibility.md`).
+- Local verification for Task 17 passed: typecheck, `test:ci:neutral` (117 tests), `test:ci:windows` (6 tests), `test:release-artifact`, full `npm run build`, `npm pack --dry-run`.
+- Audit note: `package.json` `files` includes the whole `dist/`, so the 87 MB Windows native-host exe ships in the npm tarball; version strings are duplicated across cli/native-host/doctor/manifest. Optional follow-ups, not blocking.
+- Environment note: loose git refs under `.git/refs/heads` were deleted by external file activity (Documents folder under cloud sync). Fixed by packing refs into `packed-refs`. Keep references packed or move the repo outside the synced folder if this recurs.
 - PR #2 is open and Draft.
 - Historical CI for this checkpoint is green on Ubuntu and Windows.
 - Tasks 1-11 are represented in the branch history.
-- Current automated verification passed: typecheck, 44 test files / 123 tests, and build.
 - Task 12 live results: all seven criteria PASS. Desktop/Web messages synchronized after reopening the Desktop conversation, revealing latency rather than loss of the shared cloud anchor.
 - Initial login inside Playwright was blocked by login safety/verification behavior; ordinary Chrome using the same dedicated profile provided a successful manual-login bootstrap, and Playwright persistence passed afterward.
 - Task 12 hard gate is PASS.
@@ -23,4 +21,4 @@ Updated: 2026-09-04 (Asia/Shanghai)
 - Desktop synchronization latency remains a Task 17 compatibility/documentation follow-up; runtime correctness must not assume immediate Desktop rendering.
 - The production doctor correctly distinguishes runtime offline, missing native-host registration, unobserved extension handshake, ready companion profile, and unavailable live page probing without treating an unperformed probe as expired authentication.
 - Task 16 covers the complete context-assisted revise/pass path, restart from `RESULT_READY` plus a `SENT` ledger entry without worker rerun or resend, duplicate observations, wrong-binding observations, and durable sequence continuation.
-- Next action: commit/push Task 16, confirm Ubuntu/Windows CI, then implement Task 17 packaging and release readiness.
+- Next action: confirm Ubuntu/Windows CI for `995931b`, then address Task 17 follow-up (Desktop latency documentation) and PR #2 review/merge planning.
