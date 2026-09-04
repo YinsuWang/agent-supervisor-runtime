@@ -13,6 +13,9 @@ class FakeExecutor implements CommandExecutor {
   async exec(file: string, args: readonly string[]): Promise<CommandExecution> {
     this.calls.push({ file, args: [...args] });
     if (this.failQuery && args[0] === "QUERY") throw new Error("missing");
+    if (args[0] === "QUERY" && args.includes("/ve")) {
+      return { stdout: `${args[1]}\n    (Default)    REG_SZ    C:\\ASR Runtime\\host.json\n`, stderr: "" };
+    }
     return { stdout: "", stderr: "" };
   }
 }
@@ -68,5 +71,11 @@ describe("Windows current-user setup", () => {
 
     executor.failQuery = true;
     expect(await manager.status()).toBe(false);
+  });
+
+  it("reads the exact current-user native host manifest registration", async () => {
+    const registry = new WindowsRegistry(new FakeExecutor());
+    await expect(registry.nativeHostManifestPath("com.agent_supervisor_runtime"))
+      .resolves.toBe("C:\\ASR Runtime\\host.json");
   });
 });

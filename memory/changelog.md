@@ -52,3 +52,14 @@
 - Manual production smoke passed: ordinary-Chrome login completed, then minimized headful Playwright reused the same dedicated profile and found an authenticated composer without sending a message. Headless reuse did not expose the composer and remains unsupported in this environment.
 - Final local verification passed: typecheck, 39 Vitest files / 106 tests, build, and companion CLI help.
 - Next: commit/push Task 14, confirm Ubuntu/Windows CI, then begin Task 15.
+
+## 2026-09-04 — Task 15 Supervisor connectivity, doctor, and security hardening
+
+- Confirmed Task 14 checkpoint `921b8f5` passed CI on Ubuntu and Windows in run `33832514063`.
+- Added the eight-state supervisor connectivity model while keeping V0.1 task state unchanged across browser, login, DOM, native-host, and runtime-restart events.
+- Added doctor probes for runtime IPC handshake, exact HKCU native-host registration, persisted extension protocol handshake, companion profile readiness, and semantic page-driver capabilities.
+- The runtime now records non-secret extension handshake health metadata; an unavailable live page probe is reported as degraded rather than incorrectly inferred as expired authentication.
+- Hardened the Native Host boundary with a strict `BIND_CONVERSATION` command schema and exact ChatGPT conversation identity validation.
+- Added consolidated security coverage for shell-command rejection, lexical and symlink workspace escape, wrong conversation identity, and stale lease fencing.
+- Final local verification passed: typecheck, 42 Vitest files / 120 tests, build, and a read-only production doctor smoke.
+- Next: commit/push Task 15, confirm Ubuntu/Windows CI, then begin Task 16.

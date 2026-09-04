@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PassThrough } from "node:stream";
@@ -66,10 +66,19 @@ describe("native host runtime bridge", () => {
       const welcome = await waitFor("WELCOME");
       expect(starts).toBe(1);
       expect(welcome.payload).toMatchObject({ runtimeInstanceId: "runtime_test", status: "READY" });
+      expect(JSON.parse(await readFile(join(runtimeHome, "health", "extension-session.json"), "utf8")))
+        .toMatchObject({ protocol: "ASR-NM/1", extensionVersion: "0.2.0", runtimeInstanceId: "runtime_test" });
 
-      input.write(encodeNativeMessage(frame("frame_command", "COMMAND", { name: "PING" }, welcome.sessionId)));
+      input.write(encodeNativeMessage(frame("frame_command", "COMMAND", {
+        name: "BIND_CONVERSATION",
+        conversationId: "conversation-1",
+        conversationUrl: "https://chatgpt.com/c/conversation-1",
+      }, welcome.sessionId)));
       const ack = await waitFor("ACK");
-      expect(ack.payload).toMatchObject({ inReplyTo: "frame_command", result: { echoed: { name: "PING" } } });
+      expect(ack.payload).toMatchObject({
+        inReplyTo: "frame_command",
+        result: { echoed: { name: "BIND_CONVERSATION", conversationId: "conversation-1" } },
+      });
     } finally {
       await bridge.stop();
       await daemon.stop();

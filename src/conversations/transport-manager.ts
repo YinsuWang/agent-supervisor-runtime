@@ -3,7 +3,8 @@ import {
   TransportLeaseError,
   type TransportLease,
 } from "./lease.js";
-import type { ConversationTransport, TransportStatus } from "./transport.js";
+import type { ConversationTransport, TransportHealth, TransportStatus } from "./transport.js";
+import type { SupervisorSessionState } from "../runtime/supervisor-session.js";
 
 type Registration = {
   transport: ConversationTransport;
@@ -32,6 +33,27 @@ export class TransportManager {
 
   status(holder: string): TransportStatus | undefined {
     return this.#registrations.get(holder)?.status;
+  }
+
+  supervisorState(holder: string): SupervisorSessionState | undefined {
+    const status = this.#registrations.get(holder)?.status;
+    if (!status) return undefined;
+    if (status === "DRAINING") return "DEGRADED";
+    return status;
+  }
+
+  applyHealth(holder: string, health: TransportHealth): SupervisorSessionState {
+    this.requireRegistration(holder);
+    if (health.detail === "AUTH_REQUIRED") return "AUTH_REQUIRED";
+    if (health.detail === "INCOMPATIBLE") return "INCOMPATIBLE";
+    if (health.status === "OFFLINE") return "OFFLINE";
+    return this.supervisorState(holder)!;
+  }
+
+  async inspectSupervisorState(holder: string): Promise<SupervisorSessionState> {
+    const registration = this.requireRegistration(holder);
+    const health = await registration.transport.health();
+    return this.applyHealth(holder, health);
   }
 
   setExchangeInFlight(holder: string, value: boolean): void {

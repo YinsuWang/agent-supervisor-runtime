@@ -1,5 +1,6 @@
 import type { Readable, Writable } from "node:stream";
-import { parseRuntimeFrame } from "../runtime/contracts.js";
+import { z } from "zod";
+import { parseRuntimeFrame, validateHello, type RuntimeFrame } from "../runtime/contracts.js";
 import type { RuntimeIpcClient, RuntimeIpcConnection } from "../runtime/ipc.js";
 import { NativeMessageDecoder, encodeNativeMessage } from "./framing.js";
 
@@ -13,6 +14,12 @@ export type NativeHostBridgeOptions = {
   sleep?: (ms: number) => Promise<void>;
 };
 
+const BindConversationCommandSchema = z.object({
+  name: z.literal("BIND_CONVERSATION"),
+  conversationId: z.string().min(1),
+  conversationUrl: z.string().url(),
+}).strict();
+
 export class NativeHostBridge {
   private connection?: RuntimeIpcConnection;
   private readonly decoder = new NativeMessageDecoder();
@@ -25,7 +32,7 @@ export class NativeHostBridge {
     this.options.input.on("data", (chunk) => {
       this.processing = this.processing.then(async () => {
         for (const raw of this.decoder.push(Buffer.from(chunk))) {
-          const frame = parseRuntimeFrame(raw);
+          const frame = parseBrowserRuntimeFrame(raw);
           await this.connection!.send(frame);
         }
       }).catch((error) => {
@@ -39,6 +46,26 @@ export class NativeHostBridge {
     await this.connection?.close();
     this.connection = undefined;
   }
+}
+
+export function parseBrowserRuntimeFrame(input: unknown): RuntimeFrame {
+  const frame = parseRuntimeFrame(input);
+  if (frame.type === "HELLO") {
+    validateHello(frame);
+    return frame;
+  }
+  if (frame.type === "HEARTBEAT") return frame;
+  if (frame.type !== "COMMAND") throw new Error(`Unsupported browser frame: ${frame.type}`);
+  const payload = frame.payload as Record<string, unknown> | undefined;
+  if (payload?.name !== "BIND_CONVERSATION") {
+    throw new Error(`Unsupported browser command: ${String(payload?.name ?? "missing")}`);
+  }
+  const command = BindConversationCommandSchema.parse(payload);
+  const url = new URL(command.conversationUrl);
+  if (url.origin !== "https://chatgpt.com" || url.pathname !== `/c/${command.conversationId}`) {
+    throw new Error("Invalid BIND_CONVERSATION identity");
+  }
+  return frame;
 }
 
 async function connectWithAutoStart(options: NativeHostBridgeOptions): Promise<RuntimeIpcConnection> {

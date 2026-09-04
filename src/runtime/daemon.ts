@@ -5,6 +5,7 @@ import type { RuntimeFrame } from "./contracts.js";
 import { RuntimeProtocolVersion, validateHello } from "./contracts.js";
 import { NamedPipeIpcServer, runtimeEndpointForHome } from "./named-pipe.js";
 import { acquireSingleInstanceLock, type SingleInstanceLock } from "./single-instance.js";
+import { writeJsonAtomic } from "../utils/json.js";
 
 export type RuntimeCommandHandler = (frame: RuntimeFrame) => Promise<unknown> | unknown;
 
@@ -40,8 +41,17 @@ export class RuntimeDaemon {
     try {
       await this.server.listen(async (frame, connection) => {
         if (frame.type === "HELLO") {
-          validateHello(frame);
+          const hello = validateHello(frame);
           const sessionId = `session_${randomUUID()}`;
+          await writeJsonAtomic(join(this.options.runtimeHome, "health", "extension-session.json"), {
+            protocol: frame.protocol,
+            extensionInstanceId: hello.extensionInstanceId,
+            extensionVersion: hello.extensionVersion,
+            capabilities: hello.capabilities,
+            runtimeInstanceId: this.runtimeInstanceId,
+            sessionId,
+            observedAt: new Date().toISOString(),
+          });
           await connection.send({
             protocol: RuntimeProtocolVersion,
             frameId: `frame_${randomUUID()}`,

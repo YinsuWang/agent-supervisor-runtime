@@ -45,4 +45,14 @@ export class WindowsRegistry {
     if (!dryRun) await this.executor.exec(operation.file, operation.args);
     return operation;
   }
+
+  async nativeHostManifestPath(name: string): Promise<string | undefined> {
+    try {
+      const result = await this.executor.exec("reg.exe", ["QUERY", this.nativeHostKey(name), "/ve"]);
+      const match = /REG_SZ\s+(.+)$/m.exec(result.stdout);
+      return match?.[1]?.trim();
+    } catch {
+      return undefined;
+    }
+  }
 }

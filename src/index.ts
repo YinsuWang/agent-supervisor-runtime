@@ -55,6 +55,13 @@ export {
 } from "./runtime/contracts.js";
 export { RuntimeDaemon, defaultRuntimeHome } from "./runtime/daemon.js";
 export {
+  SupervisorConnectivityEventSchema,
+  SupervisorSessionStateSchema,
+  createSupervisorSession,
+  transitionSupervisorSession,
+} from "./runtime/supervisor-session.js";
+export { runSupervisorDoctor } from "./setup/doctor.js";
+export {
   DEFAULT_MAX_IPC_FRAME_BYTES,
   LengthPrefixedJsonDecoder,
   RuntimeFrameDecoder,
@@ -62,7 +69,7 @@ export {
 } from "./runtime/ipc.js";
 export { NamedPipeIpcClient, NamedPipeIpcServer, runtimeEndpointForHome } from "./runtime/named-pipe.js";
 export { acquireSingleInstanceLock } from "./runtime/single-instance.js";
-export { NativeHostBridge } from "./native-host/bridge.js";
+export { NativeHostBridge, parseBrowserRuntimeFrame } from "./native-host/bridge.js";
 export {
   MAX_NATIVE_HOST_INPUT_BYTES,
   MAX_NATIVE_HOST_OUTPUT_BYTES,
@@ -126,6 +133,8 @@ export type {
 } from "./page-driver/contracts.js";
 export type { HelloPayload, RuntimeFrame, RuntimeFrameType, WelcomePayload } from "./runtime/contracts.js";
 export type { RuntimeCommandHandler, RuntimeDaemonOptions } from "./runtime/daemon.js";
+export type { SupervisorConnectivityEvent, SupervisorSession, SupervisorSessionState } from "./runtime/supervisor-session.js";
+export type { DoctorProbeOutput, SupervisorDoctorCheck, SupervisorDoctorOptions, SupervisorDoctorProbes } from "./setup/doctor.js";
 export type { RuntimeIpcClient, RuntimeIpcConnection, RuntimeIpcServer } from "./runtime/ipc.js";
 export type { SingleInstanceLock, SingleInstanceOptions } from "./runtime/single-instance.js";
 export type { NativeHostBridgeOptions } from "./native-host/bridge.js";
