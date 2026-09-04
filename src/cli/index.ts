@@ -13,7 +13,7 @@ import { companionLoginCommand, companionResetCommand } from "./commands/compani
 import { RuntimeDaemon, defaultRuntimeHome } from "../runtime/daemon.js";
 
 const program = new Command();
-program.name("orchestrator").description("Local supervisor-worker orchestration runtime").version("0.1.0");
+program.name("orchestrator").description("Local supervisor-worker orchestration runtime").version("0.2.0");
 program.option("-c, --config <path>", "configuration file", "orchestrator.config.json");
 
 program.command("init").description("initialize runtime configuration").action(async () => { await initCommand(); });

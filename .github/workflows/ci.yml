@@ -20,7 +20,12 @@ jobs:
         run: npm install
       - name: Typecheck
         run: npm run typecheck
-      - name: Test
-        run: npm test -- --run
+      - name: Test platform-neutral suite
+        run: npm run test:ci:neutral
+      - name: Test Windows runtime and setup integrations
+        if: runner.os == 'Windows'
+        run: npm run test:ci:windows
       - name: Build
         run: npm run build
+      - name: Smoke release native host
+        run: npm run test:release-artifact
