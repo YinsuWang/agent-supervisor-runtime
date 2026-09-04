@@ -25,7 +25,7 @@ beforeAll(async () => {
   });
   backendBundle = result.outputFiles[0]!.text;
   browser = await chromium.launch({ channel: "chrome", headless: true });
-});
+}, 30_000);
 
 beforeEach(async () => {
   page = await browser.newPage();
@@ -34,8 +34,8 @@ beforeEach(async () => {
   await page.addScriptTag({ content: backendBundle });
 });
 
-afterEach(async () => page.close());
-afterAll(async () => browser.close());
+afterEach(async () => page?.close());
+afterAll(async () => browser?.close());
 
 describe("ExtensionChatGptPageDriver", () => {
   it("deduplicates repeated DOM message nodes", async () => {

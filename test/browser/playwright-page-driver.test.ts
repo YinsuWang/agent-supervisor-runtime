@@ -15,7 +15,7 @@ let fixtureHtml: string;
 beforeAll(async () => {
   fixtureHtml = await readFile(fixturePath, "utf8");
   browser = await chromium.launch({ channel: "chrome", headless: true });
-});
+}, 30_000);
 
 beforeEach(async () => {
   page = await browser.newPage();
@@ -23,8 +23,8 @@ beforeEach(async () => {
   await page.goto(fixtureUrl);
 });
 
-afterEach(async () => page.close());
-afterAll(async () => browser.close());
+afterEach(async () => page?.close());
+afterAll(async () => browser?.close());
 
 describe("PlaywrightChatGptPageDriver", () => {
   it("deduplicates repeated DOM message nodes", async () => {

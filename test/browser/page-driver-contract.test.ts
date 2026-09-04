@@ -84,7 +84,7 @@ beforeAll(async () => {
   page = await browser.newPage();
   await page.setContent(await readFile(fixturePath, "utf8"), { waitUntil: "load" });
   driver = new FixturePageDriver(page);
-});
+}, 30_000);
 
 afterAll(async () => {
   await browser?.close();

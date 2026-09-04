@@ -3,7 +3,7 @@
 Updated: 2026-09-04 (Asia/Shanghai)
 
 - Local clone is on `feat/v0.2-chatgpt-transport`; the latest pushed Task 12 checkpoint is `db08bf5`.
-- Task 13 changes are locally complete and awaiting their final commit/push checkpoint.
+- Task 13 checkpoint `706f5f8` is pushed. Windows CI passed; an Ubuntu-only browser startup hook timeout is fixed locally and awaits its follow-up push.
 - PR #2 is open and Draft.
 - Historical CI for this checkpoint is green on Ubuntu and Windows.
 - Tasks 1-11 are represented in the branch history.

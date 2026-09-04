@@ -37,4 +37,6 @@
 - Live smoke passed on Chrome 152.0.7977.65, Playwright 1.62.1, Node v24.16.0, and Windows 10.0.26100: both backends matched identity, extension submission was observed, generation transitioned to idle, and the correlated assistant reply was readable.
 - Review hardening: all state-bearing protocol operations require an expected conversation ID and re-check it before accessing page state.
 - Verification before checkpoint passed: typecheck, 37 Vitest files / 101 tests, extension build, and package build.
+- First remote CI run passed Windows but Ubuntu timed out while three browser suites launched Chrome concurrently under Vitest's 10-second default hook timeout; no test assertion failed.
+- Raised only the browser-startup hook ceiling to 30 seconds and made browser cleanup tolerant of partial setup. Business timing and pass/fail assertions remain unchanged.
 - Next: commit/push the Task 13 checkpoint, confirm CI, then begin Task 14 Background Web Companion.
