@@ -8,6 +8,7 @@
   },
   "files": [
     "dist",
+    "!dist/native-host-release",
     "extension/dist",
     "extension/manifest.json",
     "extension/popup.html",

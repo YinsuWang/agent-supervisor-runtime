@@ -10,6 +10,7 @@ import { NamedPipeIpcClient, runtimeEndpointForHome } from "../runtime/named-pip
 import type { SupervisorSessionState } from "../runtime/supervisor-session.js";
 import { NativeHostManifestSchema } from "./native-host-manifest.js";
 import { WindowsRegistry } from "./windows-registry.js";
+import { ASR_VERSION } from "../version.js";
 
 const ExtensionSessionObservationSchema = z.object({
   protocol: z.literal(RuntimeProtocolVersion),
@@ -143,7 +144,7 @@ async function probeRuntimeIpc(runtimeHome: string): Promise<DoctorProbeOutput> 
         frameId: `doctor_${randomUUID()}`,
         type: "HELLO",
         timestamp: new Date().toISOString(),
-        payload: { extensionInstanceId: "doctor", extensionVersion: "0.2.0", capabilities: ["doctor"] },
+        payload: { extensionInstanceId: "doctor", extensionVersion: ASR_VERSION, capabilities: ["doctor"] },
       });
     }, reject);
   });

@@ -11,9 +11,10 @@ import { setupCommand } from "./commands/setup.js";
 import { serviceDisableCommand, serviceEnableCommand, serviceStatusCommand } from "./commands/service.js";
 import { companionLoginCommand, companionResetCommand } from "./commands/companion.js";
 import { RuntimeDaemon, defaultRuntimeHome } from "../runtime/daemon.js";
+import { ASR_VERSION } from "../version.js";
 
 const program = new Command();
-program.name("orchestrator").description("Local supervisor-worker orchestration runtime").version("0.2.0");
+program.name("orchestrator").description("Local supervisor-worker orchestration runtime").version(ASR_VERSION);
 program.option("-c, --config <path>", "configuration file", "orchestrator.config.json");
 
 program.command("init").description("initialize runtime configuration").action(async () => { await initCommand(); });
@@ -34,7 +35,7 @@ program.command("daemon")
   .description("run the per-user ASR runtime authority in the foreground")
   .option("--runtime-home <path>", "runtime home directory", defaultRuntimeHome())
   .action(async (options: { runtimeHome: string }) => {
-    const daemon = new RuntimeDaemon({ runtimeHome: options.runtimeHome, runtimeVersion: "0.2.0" });
+    const daemon = new RuntimeDaemon({ runtimeHome: options.runtimeHome, runtimeVersion: ASR_VERSION });
     await daemon.start();
     const shutdown = async () => { await daemon.stop(); process.exitCode = 0; };
     process.once("SIGINT", () => void shutdown());

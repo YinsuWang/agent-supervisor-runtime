@@ -4,18 +4,19 @@ import { dirname, join, resolve } from "node:path";
 import { defaultRuntimeHome } from "../runtime/daemon.js";
 import { RuntimeDaemon } from "../runtime/daemon.js";
 import { RuntimeProtocolVersion } from "../runtime/contracts.js";
+import { ASR_VERSION } from "../version.js";
 import { NamedPipeIpcClient, runtimeEndpointForHome } from "../runtime/named-pipe.js";
 import { NativeHostBridge } from "./bridge.js";
 
 async function main(): Promise<void> {
   if (process.argv.includes("--self-test")) {
-    process.stdout.write(`${JSON.stringify({ ok: true, protocol: RuntimeProtocolVersion, version: "0.2.0" })}\n`);
+    process.stdout.write(`${JSON.stringify({ ok: true, protocol: RuntimeProtocolVersion, version: ASR_VERSION })}\n`);
     return;
   }
 
   const runtimeHome = defaultRuntimeHome();
   if (process.argv.includes("--asr-daemon")) {
-    const daemon = new RuntimeDaemon({ runtimeHome, runtimeVersion: "0.2.0" });
+    const daemon = new RuntimeDaemon({ runtimeHome, runtimeVersion: ASR_VERSION });
     await daemon.start();
     const shutdown = async () => { await daemon.stop(); process.exitCode = 0; };
     process.once("SIGINT", () => void shutdown());

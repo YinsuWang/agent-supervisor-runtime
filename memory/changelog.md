@@ -83,3 +83,17 @@
 - Audit findings recorded, not blocking: `files` ships the 87 MB Windows host exe; version strings duplicated across cli/native-host/doctor/manifest.
 - Environment incident: loose refs under `.git/refs/heads` were deleted by external file activity (likely cloud sync of the Documents folder), which made the second commit appear as a root commit. Repaired by repacking refs into `.git/packed-refs`; remote confirmed at `995931b`. If this recurs, keep refs packed or move the repo outside the synced folder.
 - Next: confirm Ubuntu/Windows CI for `995931b`, then address the Task 17 follow-up (Desktop latency documentation) and plan PR #2 review/merge.
+
+## 2026-09-04 — Task 17 CI confirmed
+
+- CI run #60 (`33839154284`) for `350fc57` on PR #2 passed on both Ubuntu and Windows.
+- Ubuntu: typecheck, neutral suite, build, release-artifact smoke all success (Windows-only step correctly skipped).
+- Windows: neutral suite, Windows runtime/setup integrations (named-pipe, native-host-runtime, setup-windows), build, and release-artifact smoke all success.
+- Next: PR #2 review/merge planning; Task 17 follow-up (Desktop latency documentation) remains open.
+
+## 2026-09-04 — Task 17 follow-up and audit improvements
+
+- Added PR #2 review: all 17 tasks verified implemented (files/commits/CI), plan checkboxes synced, PR moved from Draft to Ready for review, description updated. CI run #61 passed on Ubuntu and Windows (one Windows rerun needed for a browser-fixture hook timeout caused by runner load, not code).
+- Documented the ChatGPT Desktop synchronization latency measurement and conversation-reopen recovery in `docs/troubleshooting/chatgpt-compatibility.md`.
+- Audit fixes: npm `files` now excludes `dist/native-host-release`, shrinking the tarball from 34.4 MB to 127.3 kB while keeping the built native-host sources; added `src/version.ts` as the single runtime version source and removed scattered `0.2.0` literals from cli/native-host/doctor.
+- Local verification passed: typecheck, 117 neutral tests, build, release-artifact smoke, npm pack dry-run.
