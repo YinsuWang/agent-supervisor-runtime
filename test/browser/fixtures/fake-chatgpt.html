@@ -26,6 +26,7 @@
       const breaker = document.querySelector('#break-capability');
       let sequence = 0;
       let generationToken = 0;
+      let activeGeneration;
 
       function appendMessage(role, content) {
         sequence += 1;
@@ -47,24 +48,28 @@
         const token = ++generationToken;
         const assistant = appendMessage('assistant', '');
         stop.hidden = false;
-        const chunks = ['Fake ', 'assistant ', 'response'];
-        let index = 0;
-        const emit = () => {
-          if (token !== generationToken) return;
-          assistant.textContent += chunks[index++];
-          if (index < chunks.length) {
-            setTimeout(emit, 15);
-          } else {
-            stop.hidden = true;
-          }
-        };
-        setTimeout(emit, 15);
+        activeGeneration = { token, assistant, chunks: ['Fake ', 'assistant ', 'response'], index: 0 };
       });
 
       stop.addEventListener('click', () => {
         generationToken += 1;
+        activeGeneration = undefined;
         stop.hidden = true;
       });
+
+      window.fakeChatGpt = {
+        emitNextChunk() {
+          if (!activeGeneration || activeGeneration.token !== generationToken) return;
+          activeGeneration.assistant.textContent += activeGeneration.chunks[activeGeneration.index++];
+          if (activeGeneration.index === activeGeneration.chunks.length) {
+            activeGeneration = undefined;
+            stop.hidden = true;
+          }
+        },
+        completeGeneration() {
+          while (activeGeneration) this.emitNextChunk();
+        },
+      };
 
       breaker.addEventListener('click', () => {
         composer.removeAttribute('contenteditable');

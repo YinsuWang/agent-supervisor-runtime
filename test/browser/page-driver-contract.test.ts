@@ -104,6 +104,16 @@ describe("ChatGptPageDriver semantic contract", () => {
     expect(receipt.messageId).toMatch(/^user-/);
     expect(await driver.detectGenerationState()).toBe("GENERATING");
 
+    await page.evaluate(() => {
+      (window as typeof window & { fakeChatGpt: { emitNextChunk(): void } }).fakeChatGpt.emitNextChunk();
+    });
+    const streaming: PageMessage[] = [];
+    for await (const message of driver.observeMessages()) streaming.push(message);
+    expect(streaming).toContainEqual(expect.objectContaining({ role: "assistant", content: "Fake " }));
+
+    await page.evaluate(() => {
+      (window as typeof window & { fakeChatGpt: { completeGeneration(): void } }).fakeChatGpt.completeGeneration();
+    });
     await expect.poll(() => driver.detectGenerationState()).toBe("IDLE");
     const observed: PageMessage[] = [];
     for await (const message of driver.observeMessages()) observed.push(message);

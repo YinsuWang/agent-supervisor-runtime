@@ -18,6 +18,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p extension/tsconfig.json --noEmit",
     "test": "vitest",
     "test:browser": "vitest --run test/browser",
+    "test:chatgpt-login": "tsx test/manual/chatgpt-login-bootstrap.ts",
+    "test:chatgpt-persistence": "tsx test/manual/chatgpt-session-persistence.ts",
     "test:chatgpt-spike": "tsx test/manual/chatgpt-feasibility.ts",
     "test:watch": "vitest"
   },
