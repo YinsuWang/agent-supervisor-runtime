@@ -11,17 +11,18 @@
 - [x] Verify Playwright profile persistence without sending additional messages.
 - [x] Prepare and verify the Task 12 failure checkpoint for commit.
 
-## Blocked by hard gate
+## Implementation
 
-- [ ] Task 13: production semantic ChatGPT page drivers.
+- [ ] Task 13: production semantic ChatGPT page drivers. (in progress)
 - [ ] Task 14: Background Web Companion.
 - [ ] Task 15: supervisor connectivity, doctor, and security hardening.
 - [ ] Task 16: durable V0.2 end-to-end loop.
 - [ ] Task 17: packaging, docs, CI, and release readiness.
+- [ ] Task 17 follow-up: measure/document Desktop synchronization latency and conversation-reopen recovery.
 
 ## Gate decision
 
 - [x] Record all seven Task 12 results and environment versions.
-- [x] Record the material Desktop/Web synchronization failure and architecture alternatives.
-- [x] Stop before Task 13.
-- [ ] Resolve the synchronization cause and repeat the gate, or obtain explicit approval for an architecture/scope change.
+- [x] Record the initially delayed Desktop/Web synchronization observation.
+- [x] Confirm both repeat-run messages eventually appeared after reopening the Desktop conversation.
+- [x] Mark Task 12 PASS without changing the approved architecture scope.

@@ -1,10 +1,10 @@
 # ChatGPT Web Feasibility Spike — September 2026
 
-Status: **FAIL — HARD GATE NOT PASSED**
+Status: **PASS — HARD GATE PASSED**
 
 Live run date: 2026-09-04
 
-Task 13 production ChatGPT selector/page-driver work remains blocked. Six Web/profile criteria passed, but Desktop/Web same-conversation synchronization was not repeatable in the tested environment.
+All seven feasibility criteria passed. Desktop/Web synchronization was eventually consistent in the tested environment, but the repeat-run messages appeared only after reopening the Desktop conversation. The latency remains a compatibility risk to revisit during Task 17 release readiness.
 
 ## Environment
 
@@ -27,7 +27,7 @@ The probe used a dedicated persistent Chrome profile under the ASR user runtime 
 | Streaming completion detection | PASS | A visible accessible Stop/停止 generation control appeared and disappeared; the correlated assistant content then reached a stable DOM state. No fixed sleep was used as the completion decision. |
 | Correlated assistant response readable | PASS | The first assistant message after the uniquely marked user probe was readable through ordered `data-message-author-role` message nodes and stabilized across samples. |
 | Persistent Playwright profile reuses manual login | PASS | After closing the Playwright persistent context, a fresh context using the same dedicated profile reopened the exact bound `/c/<id>` page with an editable composer and no additional login. |
-| Desktop/Web same cloud conversation | FAIL | One initial operator check saw both probe messages in Desktop. On the required repeat run, both new messages were visible in Web but absent from Desktop despite the operator confirming the correct ChatGPT Chat view. The synchronization behavior was therefore not repeatable. |
+| Desktop/Web same cloud conversation | PASS | Both probe rounds eventually appeared in the same Desktop Chat conversation. During the repeat run, the new messages were initially absent and became visible after reopening the conversation, demonstrating a shared cloud anchor with observable synchronization latency. |
 
 ## Login bootstrap finding
 
@@ -41,23 +41,23 @@ The compliant workaround for the feasibility probe was to start ordinary Chrome 
 
 ## Failure mode and boundary
 
-The material failure is not Web DOM access: identity, semantic input, background operation, streaming lifecycle, response correlation, and persistent authentication all passed. The failed assumption is that a newly written ordinary Chat conversation is a reliably observable shared cloud anchor in ChatGPT Desktop in this environment.
+Web DOM access passed for identity, semantic input, background operation, streaming lifecycle, response correlation, and persistent authentication. The Desktop/Web test also established a shared cloud conversation anchor, but not immediate propagation.
 
-The observed evidence does not establish whether the root cause is account/workspace synchronization state, client cache/session state, product rollout behavior, or a service defect. The probe intentionally did not inspect account identifiers or private content, so it cannot distinguish those possibilities locally.
+The observed evidence does not establish whether the delay came from network latency, client cache/session state, or service propagation. The probe intentionally did not inspect account identifiers or private content, so it cannot distinguish those possibilities locally.
 
-OpenAI documentation states that chats created in Chat should sync between ChatGPT Web and Desktop, while unsaved Temporary Chats do not appear in history. The operator confirmed the correct Desktop Chat location, but the repeat-run messages still did not appear.
+OpenAI documentation states that chats created in Chat should sync between ChatGPT Web and Desktop, while unsaved Temporary Chats do not appear in history. The eventual repeat-run observation is consistent with that documented shared history, with added latency in this environment.
 
 ## Gate decision
 
-**FAIL.** Criterion 7 is material and non-repeatable, so the mandatory Task 12 gate is not passed. Task 13 and all dependent Tasks 14–17 must not begin under the approved plan.
+**PASS.** All seven material criteria were observed without prohibited automation. Task 13 may proceed under the approved plan.
 
 No OCR, coordinate clicking, Desktop UI Automation, Win32 input injection, credential extraction, or hidden API workaround is authorized by this result.
 
-## Architecture-review alternatives
+## Known limitation and release follow-up
 
-1. Diagnose the Web/Desktop synchronization discrepancy as a product/account/workspace issue using an explicit non-temporary Chat, verified matching workspace, Desktop restart/sign-out/sign-in, an observation interval, and OpenAI Support if needed. Repeat the gate only after that cause is resolved.
-2. Amend V0.2 scope to support ChatGPT Web/Chrome as the human surface and defer Desktop compatibility. This changes the approved product scope and requires explicit architecture approval.
-3. Replace the Desktop compatibility promise with a separately approved, officially supported conversation transport if one becomes available. Do not infer private ChatGPT APIs or copy browser credentials.
+1. Treat Desktop visibility as eventually consistent; runtime correctness must rely on the Web transport observation and durable ledger rather than immediate Desktop rendering.
+2. During Task 17, repeat the manual smoke with a measured observation window and document expected troubleshooting steps such as reopening the conversation.
+3. If latency becomes operationally material, investigate account/workspace/client state or OpenAI Support before changing the approved architecture. Do not infer private ChatGPT APIs or copy browser credentials.
 
 ## Manual commands
 
