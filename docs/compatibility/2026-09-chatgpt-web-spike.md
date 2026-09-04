@@ -65,9 +65,18 @@ No OCR, coordinate clicking, Desktop UI Automation, Win32 input injection, crede
 npm run test:chatgpt-login
 npm run test:chatgpt-spike
 npm run test:chatgpt-persistence
+npm run test:chatgpt-driver-smoke
 ```
 
 The login and persistence helpers are manual-only and remain excluded from `npm test` and CI.
+
+## Task 13 production page-driver smoke
+
+The production `ExtensionChatGptPageDriver` and `PlaywrightChatGptPageDriver` completed a live semantic smoke on 2026-09-04 using the environment above. The run confirmed matching conversation identity, non-destructive dynamic-submit capability probing, extension-backed semantic submission, user-message observation, `GENERATING` to `IDLE` lifecycle detection, and a readable correlated assistant response.
+
+The live page renders its Send control only after composer input and its Stop control only during generation. Compatibility checks therefore treat these as state-dependent controls: the submit probe briefly writes and clears a draft without clicking, while the live smoke verifies the generation control after a correlated submission. Stable `data-testid` selectors are isolated in the compatibility profile as fallbacks behind semantic roles and accessible names.
+
+All message observation, generation-state, health, and submission operations carrying a binding expectation re-check the current `/c/<id>` identity and fail closed if the page has switched conversations.
 
 ## Official references
 

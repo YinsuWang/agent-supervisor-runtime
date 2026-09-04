@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { conversationIdentityFromPageUrl } from "../../src/page-driver/profile.js";
 
 export const DEVELOPMENT_EXTENSION_ID = "nnolaedbmhibcffbjopphajjkbcnflln" as const;
 export const NATIVE_HOST_NAME = "com.agent_supervisor_runtime" as const;
@@ -17,6 +18,11 @@ export const ConversationIdentitySchema = z.object({
 
 export const ExtensionMessageSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("GET_CONVERSATION_IDENTITY") }),
+  z.object({ type: z.literal("PAGE_DRIVER_INSPECT") }),
+  z.object({ type: z.literal("PAGE_DRIVER_SUBMIT"), message: z.string().min(1), expectedConversationId: z.string().min(1) }),
+  z.object({ type: z.literal("PAGE_DRIVER_OBSERVE"), expectedConversationId: z.string().min(1), afterMessageId: z.string().min(1).optional() }),
+  z.object({ type: z.literal("PAGE_DRIVER_GENERATION_STATE"), expectedConversationId: z.string().min(1) }),
+  z.object({ type: z.literal("PAGE_DRIVER_HEALTH"), expectedConversationId: z.string().min(1) }),
   z.object({ type: z.literal("REGISTER_BINDING"), identity: ConversationIdentitySchema }),
   z.object({ type: z.literal("GET_EXTENSION_STATUS") }),
 ]);
@@ -33,13 +39,10 @@ export type ConversationIdentity = z.infer<typeof ConversationIdentitySchema>;
 export type ExtensionMessage = z.infer<typeof ExtensionMessageSchema>;
 export type ExtensionStatus = z.infer<typeof ExtensionStatusSchema>;
 
+export function isContentScriptMessage(message: ExtensionMessage): boolean {
+  return message.type === "GET_CONVERSATION_IDENTITY" || message.type.startsWith("PAGE_DRIVER_");
+}
+
 export function conversationIdentityFromUrl(value: string): ConversationIdentity {
-  const url = new URL(value);
-  if (url.origin !== "https://chatgpt.com") throw new Error("NOT_CHATGPT_PAGE");
-  const match = /^\/c\/([^/?#]+)/.exec(url.pathname);
-  if (!match?.[1]) throw new Error("CONVERSATION_ID_UNAVAILABLE");
-  return ConversationIdentitySchema.parse({
-    conversationId: match[1],
-    conversationUrl: `${url.origin}/c/${match[1]}`,
-  });
+  return ConversationIdentitySchema.parse(conversationIdentityFromPageUrl(value));
 }

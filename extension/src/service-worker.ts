@@ -33,7 +33,7 @@ chrome.runtime.onMessage.addListener((raw, _sender, sendResponse) => {
   }
 
   const message = parsed.data;
-  if (message.type === "GET_CONVERSATION_IDENTITY") return false;
+  if (message.type === "GET_CONVERSATION_IDENTITY" || message.type.startsWith("PAGE_DRIVER_")) return false;
 
   void (async () => {
     try {

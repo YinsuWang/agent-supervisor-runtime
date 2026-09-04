@@ -35,6 +35,10 @@ export {
 export { WorkspacePolicy } from "./context/workspace-policy.js";
 export { RuntimeEvidenceSource } from "./context/sources/runtime-evidence.js";
 export { evaluatePageCompatibility } from "./page-driver/compatibility.js";
+export { PageDriverError } from "./page-driver/contracts.js";
+export { ExtensionChatGptPageDriver } from "./page-driver/extension-backend.js";
+export { PlaywrightChatGptPageDriver } from "./page-driver/playwright-backend.js";
+export { CHATGPT_WEB_COMPATIBILITY_PROFILE, conversationIdentityFromPageUrl } from "./page-driver/profile.js";
 export {
   HelloPayloadSchema,
   RuntimeFrameSchema,
@@ -110,6 +114,8 @@ export type {
   PageCompatibility,
   PageCompatibilityStatus,
   PageConversationIdentity,
+  PageDriverErrorCode,
+  PageDriverOptions,
   PageMessage,
   PageMessageRole,
   SubmitReceipt,

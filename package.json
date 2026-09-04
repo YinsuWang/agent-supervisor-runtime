@@ -19,6 +19,7 @@
     "test": "vitest",
     "test:browser": "vitest --run test/browser",
     "test:chatgpt-login": "tsx test/manual/chatgpt-login-bootstrap.ts",
+    "test:chatgpt-driver-smoke": "tsx test/manual/chatgpt-page-driver-smoke.ts",
     "test:chatgpt-persistence": "tsx test/manual/chatgpt-session-persistence.ts",
     "test:chatgpt-spike": "tsx test/manual/chatgpt-feasibility.ts",
     "test:watch": "vitest"

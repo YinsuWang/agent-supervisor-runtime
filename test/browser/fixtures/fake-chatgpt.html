@@ -14,6 +14,8 @@
     <div id="composer" role="textbox" aria-label="Message ChatGPT" contenteditable="true"></div>
     <button id="send" type="button" aria-label="Send message">Send</button>
     <button id="stop" type="button" aria-label="Stop generating" hidden>Stop</button>
+    <button id="continue" type="button" aria-label="Continue generating" hidden>Continue</button>
+    <button id="retry" type="button" aria-label="Try again" hidden>Try again</button>
     <button id="break-capability" type="button">Break composer capability</button>
   </main>
   <script>
@@ -23,6 +25,8 @@
       const composer = document.querySelector('#composer');
       const send = document.querySelector('#send');
       const stop = document.querySelector('#stop');
+      const continueButton = document.querySelector('#continue');
+      const retry = document.querySelector('#retry');
       const breaker = document.querySelector('#break-capability');
       let sequence = 0;
       let generationToken = 0;
@@ -42,8 +46,11 @@
       send.addEventListener('click', () => {
         const text = composer.textContent.trim();
         if (!text) return;
+        continueButton.hidden = true;
+        retry.hidden = true;
         appendMessage('user', text);
         composer.textContent = '';
+        send.disabled = true;
 
         const token = ++generationToken;
         const assistant = appendMessage('assistant', '');
@@ -55,6 +62,7 @@
         generationToken += 1;
         activeGeneration = undefined;
         stop.hidden = true;
+        send.disabled = false;
       });
 
       window.fakeChatGpt = {
@@ -64,10 +72,30 @@
           if (activeGeneration.index === activeGeneration.chunks.length) {
             activeGeneration = undefined;
             stop.hidden = true;
+            send.disabled = false;
           }
         },
         completeGeneration() {
           while (activeGeneration) this.emitNextChunk();
+        },
+        duplicateLastMessage() {
+          const last = messages.lastElementChild;
+          if (last) messages.append(last.cloneNode(true));
+        },
+        interruptGeneration() {
+          generationToken += 1;
+          activeGeneration = undefined;
+          stop.hidden = true;
+          continueButton.hidden = false;
+          send.disabled = false;
+        },
+        triggerError() {
+          generationToken += 1;
+          activeGeneration = undefined;
+          stop.hidden = true;
+          continueButton.hidden = true;
+          retry.hidden = false;
+          send.disabled = false;
         },
       };
 

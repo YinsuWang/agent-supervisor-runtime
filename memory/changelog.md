@@ -27,3 +27,14 @@
 - Reclassified criterion 7 from apparent failure to PASS with synchronization latency; the shared cloud conversation anchor is feasible, but Desktop visibility is not immediate.
 - Decision: Task 12 hard gate passes, the approved Web + Desktop architecture remains unchanged, and Task 13 may begin.
 - Follow-up: measure and document Desktop synchronization latency during Task 17 release readiness; runtime correctness must remain based on Web transport observations and durable state.
+
+## 2026-09-04 — Task 13 production semantic page drivers
+
+- Implemented shared ChatGPT semantic compatibility profile plus production Chrome-extension and Playwright page-driver backends.
+- Added fail-closed conversation identity checks, semantic composer submission, message observation/deduplication, cursor validation, and `IDLE` / `GENERATING` / `INTERRUPTED` / `ERROR` lifecycle detection.
+- Extended the narrow extension protocol for page-driver inspection, submission, observation, generation state, and health without adding a general execution surface.
+- Added deterministic browser coverage for duplicate mutations, interrupted/retry states, wrong-conversation rejection, and asynchronously rendered send controls.
+- Live smoke passed on Chrome 152.0.7977.65, Playwright 1.62.1, Node v24.16.0, and Windows 10.0.26100: both backends matched identity, extension submission was observed, generation transitioned to idle, and the correlated assistant reply was readable.
+- Review hardening: all state-bearing protocol operations require an expected conversation ID and re-check it before accessing page state.
+- Verification before checkpoint passed: typecheck, 37 Vitest files / 101 tests, extension build, and package build.
+- Next: commit/push the Task 13 checkpoint, confirm CI, then begin Task 14 Background Web Companion.

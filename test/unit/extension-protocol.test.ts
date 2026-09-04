@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createNativeHostManifest } from "../../src/setup/native-host-manifest.js";
-import { DEVELOPMENT_EXTENSION_ID, conversationIdentityFromUrl } from "../../extension/src/protocol.js";
+import {
+  DEVELOPMENT_EXTENSION_ID,
+  ExtensionMessageSchema,
+  conversationIdentityFromUrl,
+  isContentScriptMessage,
+} from "../../extension/src/protocol.js";
 
 describe("Chrome extension protocol", () => {
   it("extracts a stable conversation identity from ordinary ChatGPT conversation URLs", () => {
@@ -27,5 +32,19 @@ describe("Chrome extension protocol", () => {
     expect(manifest.allowed_origins).toEqual([
       "chrome-extension://nnolaedbmhibcffbjopphajjkbcnflln/",
     ]);
+  });
+
+  it("validates narrow page-driver commands and rejects unscoped submission", () => {
+    const valid = ExtensionMessageSchema.parse({
+      type: "PAGE_DRIVER_SUBMIT",
+      message: "[ASR/1] probe",
+      expectedConversationId: "conversation-1",
+    });
+    expect(isContentScriptMessage(valid)).toBe(true);
+    expect(() => ExtensionMessageSchema.parse({ type: "PAGE_DRIVER_SUBMIT", message: "probe" })).toThrow();
+    expect(() => ExtensionMessageSchema.parse({ type: "PAGE_DRIVER_OBSERVE" })).toThrow();
+    expect(() => ExtensionMessageSchema.parse({ type: "PAGE_DRIVER_GENERATION_STATE" })).toThrow();
+    expect(() => ExtensionMessageSchema.parse({ type: "PAGE_DRIVER_HEALTH" })).toThrow();
+    expect(() => ExtensionMessageSchema.parse({ type: "PAGE_DRIVER_SHELL", command: "whoami" })).toThrow();
   });
 });

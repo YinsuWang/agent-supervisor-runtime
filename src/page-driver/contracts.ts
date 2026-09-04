@@ -34,7 +34,30 @@ export type SubmitReceipt = {
   messageId: string;
 };
 
-export type GenerationState = "IDLE" | "GENERATING";
+export type GenerationState = "IDLE" | "GENERATING" | "INTERRUPTED" | "ERROR";
+
+export type PageDriverErrorCode =
+  | "CONVERSATION_IDENTITY_UNAVAILABLE"
+  | "WRONG_CONVERSATION"
+  | "COMPOSER_UNAVAILABLE"
+  | "SUBMIT_UNAVAILABLE"
+  | "SUBMIT_NOT_OBSERVED"
+  | "CURSOR_NOT_FOUND";
+
+export class PageDriverError extends Error {
+  constructor(
+    readonly code: PageDriverErrorCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = "PageDriverError";
+  }
+}
+
+export type PageDriverOptions = {
+  expectedConversationId?: string;
+  submitObservationTimeoutMs?: number;
+};
 
 export interface ChatGptPageDriver {
   inspectConversation(): Promise<PageConversationIdentity>;
