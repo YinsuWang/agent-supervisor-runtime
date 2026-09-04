@@ -9,6 +9,7 @@ import { doctorCommand } from "./commands/doctor.js";
 import { browserInstallCommand, browserUninstallCommand } from "./commands/browser.js";
 import { setupCommand } from "./commands/setup.js";
 import { serviceDisableCommand, serviceEnableCommand, serviceStatusCommand } from "./commands/service.js";
+import { companionLoginCommand, companionResetCommand } from "./commands/companion.js";
 import { RuntimeDaemon, defaultRuntimeHome } from "../runtime/daemon.js";
 
 const program = new Command();
@@ -89,6 +90,20 @@ service.command("status").action(async () => {
   if (process.platform !== "win32") throw new Error("WINDOWS_ONLY");
   console.log((await serviceStatusCommand({})) ? "enabled" : "disabled");
 });
+
+const companion = program.command("companion").description("manage the dedicated background ChatGPT profile");
+companion.command("login")
+  .option("--runtime-home <path>", "runtime home directory", defaultRuntimeHome())
+  .option("--chrome-executable <path>", "ordinary Chrome executable used for manual login")
+  .action(async (options: { runtimeHome: string; chromeExecutable?: string }) => {
+    console.log("Complete ChatGPT login in the dedicated Chrome window, then close that window.");
+    console.log(JSON.stringify(await companionLoginCommand(options), null, 2));
+  });
+companion.command("reset")
+  .option("--runtime-home <path>", "runtime home directory", defaultRuntimeHome())
+  .action(async (options: { runtimeHome: string }) => {
+    console.log(JSON.stringify(await companionResetCommand(options), null, 2));
+  });
 
 program.parseAsync().catch((error) => {
   console.error((error as Error).message);

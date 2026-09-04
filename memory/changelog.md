@@ -39,4 +39,16 @@
 - Verification before checkpoint passed: typecheck, 37 Vitest files / 101 tests, extension build, and package build.
 - First remote CI run passed Windows but Ubuntu timed out while three browser suites launched Chrome concurrently under Vitest's 10-second default hook timeout; no test assertion failed.
 - Raised only the browser-startup hook ceiling to 30 seconds and made browser cleanup tolerant of partial setup. Business timing and pass/fail assertions remain unchanged.
-- Next: commit/push the Task 13 checkpoint, confirm CI, then begin Task 14 Background Web Companion.
+- Follow-up checkpoint `c49ef34` passed CI on Ubuntu and Windows in run `33831460444`.
+- Decision: Task 13 is complete; begin Task 14 Background Web Companion.
+
+## 2026-09-04 — Task 14 Background Web Companion
+
+- Added a dedicated companion profile resolver that rejects project-state and default-Chrome profile overlap.
+- Added `orchestrator companion login` using ordinary Chrome and `orchestrator companion reset` scoped to the resolved ASR-owned profile.
+- Implemented `BackgroundWebTransport` over the production Playwright page driver with explicit binding checks, lease fencing/renewal, standby behavior, correlated response observation, and `AUTH_REQUIRED` / `INCOMPATIBLE` details.
+- Added one-way DRAINING behavior so periodic reconnects cannot cancel a higher-priority Chrome handback request during an in-flight exchange.
+- Integration coverage passed for Chrome ACTIVE -> expiry -> Background epoch+1 ACTIVE -> Chrome return -> drain -> safe handback, plus profile isolation, login/reset lifecycle, auth expiry, and lease renewal.
+- Manual production smoke passed: ordinary-Chrome login completed, then minimized headful Playwright reused the same dedicated profile and found an authenticated composer without sending a message. Headless reuse did not expose the composer and remains unsupported in this environment.
+- Final local verification passed: typecheck, 39 Vitest files / 106 tests, build, and companion CLI help.
+- Next: commit/push Task 14, confirm Ubuntu/Windows CI, then begin Task 15.

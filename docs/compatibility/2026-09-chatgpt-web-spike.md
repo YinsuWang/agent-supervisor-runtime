@@ -66,6 +66,7 @@ npm run test:chatgpt-login
 npm run test:chatgpt-spike
 npm run test:chatgpt-persistence
 npm run test:chatgpt-driver-smoke
+npm run test:companion-session
 ```
 
 The login and persistence helpers are manual-only and remain excluded from `npm test` and CI.
@@ -77,6 +78,12 @@ The production `ExtensionChatGptPageDriver` and `PlaywrightChatGptPageDriver` co
 The live page renders its Send control only after composer input and its Stop control only during generation. Compatibility checks therefore treat these as state-dependent controls: the submit probe briefly writes and clears a draft without clicking, while the live smoke verifies the generation control after a correlated submission. Stable `data-testid` selectors are isolated in the compatibility profile as fallbacks behind semantic roles and accessible names.
 
 All message observation, generation-state, health, and submission operations carrying a binding expectation re-check the current `/c/<id>` identity and fail closed if the page has switched conversations.
+
+## Task 14 Background Web Companion smoke
+
+The production `orchestrator companion login` flow opened ordinary Chrome with the dedicated per-user runtime profile and completed without reading or copying browser credentials. A subsequent `npm run test:companion-session` run launched the production Playwright persistent context against that same profile and found the authenticated ChatGPT composer without sending a message.
+
+In this environment the proven persistent-session path requires headful Chrome; the companion launches it minimized on Windows. Headless mode did not expose the authenticated composer and is not treated as a supported fallback.
 
 ## Official references
 

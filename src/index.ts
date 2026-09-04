@@ -39,6 +39,10 @@ export { PageDriverError } from "./page-driver/contracts.js";
 export { ExtensionChatGptPageDriver } from "./page-driver/extension-backend.js";
 export { PlaywrightChatGptPageDriver } from "./page-driver/playwright-backend.js";
 export { CHATGPT_WEB_COMPATIBILITY_PROFILE, conversationIdentityFromPageUrl } from "./page-driver/profile.js";
+export { assertCompanionProfileDirectory, companionProfileDirectory, defaultChromeProfileDirectories } from "./companion/profile.js";
+export { companionLogin, companionReset, findChromeExecutable } from "./companion/login.js";
+export { BackgroundWebTransport, CompanionTransportError, launchPersistentCompanionContext } from "./companion/transport.js";
+export type { BackgroundWebTransportOptions, CompanionBrowserContext, CompanionPage, CompanionTransportErrorCode } from "./companion/transport.js";
 export {
   HelloPayloadSchema,
   RuntimeFrameSchema,
