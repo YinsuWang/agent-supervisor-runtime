@@ -63,3 +63,14 @@
 - Added consolidated security coverage for shell-command rejection, lexical and symlink workspace escape, wrong conversation identity, and stale lease fencing.
 - Final local verification passed: typecheck, 42 Vitest files / 120 tests, build, and a read-only production doctor smoke.
 - Next: commit/push Task 15, confirm Ubuntu/Windows CI, then begin Task 16.
+
+## 2026-09-04 — Task 15 CI follow-up and Task 16 durable supervisor loop
+
+- Task 15 CI run `33833369175` passed Ubuntu. On Windows, two browser-fixture tests completed their operations after Vitest's 5-second per-test default under a heavily delayed runner; all non-browser Task 15 tests passed.
+- Follow-up `b7cb79b` raises only the three browser-fixture suite ceilings to 30 seconds; local typecheck and all 10 browser tests passed.
+- Added `buildConversationRuntime` as the production wiring entry for a real file store, message ledger, ChatGPT supervisor adapter, Context Broker, worker, and Orchestrator.
+- Added a deterministic full V0.2 flow covering review packet, on-demand context, `REVISE`, a second worker run, `PASS`, and durable completion.
+- Added restart coverage from persisted `RESULT_READY` plus `SENT`, proving the worker is not rerun, the request is not resent, a repeated resume is idempotent, duplicate observations are ignored, and wrong-binding observations cannot correlate.
+- Restart testing exposed sequence reuse after process reconstruction. Default ASR sequence allocation now continues from the maximum persisted binding sequence; injected deterministic generators remain supported.
+- Final local verification passed: typecheck, 44 Vitest files / 123 tests, build, and diff check.
+- Next: commit/push Task 16, confirm Ubuntu/Windows CI, then begin Task 17.

@@ -56,6 +56,11 @@ export class MessageLedger {
     const records = await this.store.listMessageRecords();
     return records.filter((record) => record.bindingId === bindingId && record.state !== "CONSUMED").sort((a,b) => a.sequence-b.sequence || a.createdAt.localeCompare(b.createdAt));
   }
+
+  async nextSequenceForBinding(bindingId: string): Promise<number> {
+    const records = (await this.store.listMessageRecords()).filter((record) => record.bindingId === bindingId);
+    return records.reduce((maximum, record) => Math.max(maximum, record.sequence), -1) + 1;
+  }
 }
 
 function sameImmutableMessage(existing: MessageLedgerEntry, input: NewMessageLedgerEntry): boolean {

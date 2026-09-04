@@ -4,6 +4,7 @@ export { FileStateStore } from "./stores/file/store.js";
 export { CodexExecWorker } from "./workers/codex-exec/adapter.js";
 export { MockSupervisorAdapter } from "./supervisors/mock/adapter.js";
 export { ChatGPTSupervisorAdapter } from "./chatgpt/supervisor-adapter.js";
+export { buildConversationRuntime, createChatGPTSupervisor } from "./adapters/registry.js";
 export { compileReviewPacket } from "./chatgpt/review-packet.js";
 export { ConversationBindingSchema } from "./conversations/binding.js";
 export {
@@ -94,6 +95,7 @@ export type {
 } from "./chatgpt/contracts.js";
 export type { CompactReviewPacket } from "./chatgpt/review-packet.js";
 export type { ChatGPTSupervisorAdapterOptions } from "./chatgpt/supervisor-adapter.js";
+export type { ConversationRuntimeOptions } from "./adapters/registry.js";
 export type { MessageLedgerEntry, MessageState, NewMessageLedgerEntry } from "./conversations/message-ledger.js";
 export type { ConversationObservation } from "./conversations/reconcile.js";
 export type { TransportLease, TransportLeaseStore } from "./conversations/lease.js";

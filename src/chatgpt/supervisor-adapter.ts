@@ -37,7 +37,7 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
   readonly #leaseEpoch: () => number;
   readonly #contextBroker?: ContextBroker;
   readonly #messageId: () => string;
-  readonly #nextSequence: () => number;
+  readonly #providedNextSequence?: () => number;
 
   constructor(options: ChatGPTSupervisorAdapterOptions) {
     this.#binding = ConversationBindingSchema.parse(options.binding);
@@ -47,8 +47,7 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
     this.#leaseEpoch = options.leaseEpoch;
     this.#contextBroker = options.contextBroker;
     this.#messageId = options.messageId ?? (() => `msg_${randomUUID()}`);
-    if (options.nextSequence) this.#nextSequence = options.nextSequence;
-    else { let sequence = 0; this.#nextSequence = () => sequence++; }
+    this.#providedNextSequence = options.nextSequence;
   }
 
   async requestReview(input: ReviewRequest): Promise<Review> {
@@ -78,7 +77,7 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
       taskId: input.task.taskId,
       runId: input.result.runId,
       kind: "REVIEW_REQUEST",
-      sequence: existing?.sequence ?? this.#nextSequence(),
+      sequence: existing?.sequence ?? await this.nextSequence(),
     });
     const content = JSON.stringify({ ...envelope, payload: compileReviewPacket(input.task, input.result, manifest) });
 
@@ -137,7 +136,7 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
       taskId: request.taskId,
       runId: request.runId,
       kind: "CONTEXT_RESPONSE",
-      sequence: this.#nextSequence(),
+      sequence: await this.nextSequence(),
       correlationId: request.messageId,
       payload,
     });
@@ -189,8 +188,12 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
 
     await this.#ledger.recordInboundConsumed({
       messageId: inboundMessageId, bindingId: outbound.bindingId, taskId: outbound.taskId, runId: outbound.runId,
-      kind: inboundKind, direction: "inbound", sequence: this.#nextSequence(), correlationId: inReplyTo, payloadHash: sha256(responseContent),
+      kind: inboundKind, direction: "inbound", sequence: await this.nextSequence(), correlationId: inReplyTo, payloadHash: sha256(responseContent),
     });
+  }
+
+  private async nextSequence(): Promise<number> {
+    return this.#providedNextSequence?.() ?? await this.#ledger.nextSequenceForBinding(this.#binding.bindingId);
   }
 }
 

@@ -7,9 +7,52 @@ import { FileStateStore } from "../stores/file/store.js";
 import { MockSupervisorAdapter } from "../supervisors/mock/adapter.js";
 import { ChatGPTSupervisorAdapter, type ChatGPTSupervisorAdapterOptions } from "../chatgpt/supervisor-adapter.js";
 import { CodexExecWorker } from "../workers/codex-exec/adapter.js";
+import type { WorkerAdapter } from "../contracts/worker.js";
+import type { ConversationBinding } from "../conversations/binding.js";
+import type { ConversationTransport } from "../conversations/transport.js";
+import { MessageLedger } from "../conversations/message-ledger.js";
+import type { ContextBroker } from "../context/broker.js";
+
+export type ConversationRuntimeOptions = {
+  worker: WorkerAdapter;
+  binding: ConversationBinding;
+  transport: ConversationTransport;
+  stateDirectory: string;
+  leaseEpoch: () => number;
+  contextBroker?: ContextBroker;
+  policy?: PolicyEngine;
+  messageId?: () => string;
+  nextSequence?: () => number;
+  now?: () => Date;
+  runId?: () => string;
+};
 
 export function createChatGPTSupervisor(options: ChatGPTSupervisorAdapterOptions): ChatGPTSupervisorAdapter {
   return new ChatGPTSupervisorAdapter(options);
+}
+
+export function buildConversationRuntime(options: ConversationRuntimeOptions) {
+  const store = new FileStateStore(options.stateDirectory);
+  const ledger = new MessageLedger(store, options.now);
+  const supervisor = createChatGPTSupervisor({
+    binding: options.binding,
+    transport: options.transport,
+    ledger,
+    leaseEpoch: options.leaseEpoch,
+    contextBroker: options.contextBroker,
+    messageId: options.messageId,
+    nextSequence: options.nextSequence,
+  });
+  const policy = options.policy ?? new PolicyEngine();
+  const orchestrator = new Orchestrator({
+    worker: options.worker,
+    supervisor,
+    store,
+    policy,
+    now: options.now,
+    runId: options.runId,
+  });
+  return { orchestrator, store, ledger, worker: options.worker, supervisor, policy };
 }
 
 export async function buildRuntime(config: RuntimeConfig, configPath = "orchestrator.config.json") {

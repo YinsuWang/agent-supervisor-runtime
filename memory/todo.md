@@ -16,8 +16,8 @@
 - [x] Task 13: production semantic ChatGPT page drivers.
 - [x] Task 14: Background Web Companion.
 - [x] Task 15: supervisor connectivity, doctor, and security hardening.
-- [ ] Task 16: durable V0.2 end-to-end loop. (next)
-- [ ] Task 17: packaging, docs, CI, and release readiness.
+- [x] Task 16: durable V0.2 end-to-end loop.
+- [ ] Task 17: packaging, docs, CI, and release readiness. (next)
 - [ ] Task 17 follow-up: measure/document Desktop synchronization latency and conversation-reopen recovery.
 
 ## Gate decision
