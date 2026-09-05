@@ -1,6 +1,6 @@
 {
   "name": "agent-supervisor-runtime",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A local supervisor runtime for durable supervisor-worker agent delegation.",
   "type": "module",
   "bin": {

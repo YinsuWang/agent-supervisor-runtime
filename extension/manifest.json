@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Agent Supervisor Runtime",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Bind an ordinary ChatGPT conversation to the local Agent Supervisor Runtime.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzHbMRpBkU4tY8vcN6owEi0gtz0ot2OZCr7/sJPnT5fohcCrKdQPO7+G7PBf8Qx4QYsTDXGxGratlku0CRnAn0LEbh66DaAqsAR8A136ju7nLFwMA6uE2A++GAwW6LUIB7nB/jPzd9ycIujWjmOLNX5LCQYccO+EmuUriFZeFZj5xzwAZgeljNl4Tew5g9tmA02uxkx7D1q83cbMf45gnPN7KGQkesdRdQH0eoYxBcYsMAr7B0SDIj6kPZgZ9mLcmXUhB4V79So7TtB0beJbD4FY7liSiyYHNzm0Qc84IJaC1sbt1PVrVjyaFfCvUdKdYcu7gZFwiU/1W73xKvKMziwIDAQAB",
   "permissions": ["nativeMessaging", "storage", "activeTab"],

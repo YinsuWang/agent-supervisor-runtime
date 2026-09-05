@@ -132,3 +132,11 @@
 - Verification: focused config/CLI/native-host/doctor tests passed; full suite passed with 44 files and 126 tests; typecheck, build, clean npm package installation, installed package's COMPLETED mock demo, and native-host self-test passed.
 - Decision: local source and package workflow is repaired for the background-web transport, but the published v0.2.0 assets were not changed or republished.
 - Remaining: perform fresh Windows Host registration, extension binding, Companion login, and a manual real ChatGPT/Codex end-to-end task.
+
+## 2026-09-05 — 修复版本验证与发布资产准备
+
+- Goal: commit and CI-verify the acceptance follow-up, then prepare assets containing the fixes.
+- Changes: committed `254ae95` in Chinese and pushed it to `origin/main`; bumped the package/runtime/extension version to `0.2.1`; staged the npm tarball and Windows Host under `release-v0.2.1`.
+- Verification: local typecheck, build, package clean-install demo, and Host self-test passed; CI run `33941628421` passed on Ubuntu and Windows.
+- Decision: `v0.2.0` remains unchanged; `v0.2.1` is not tagged or published until the fresh Windows/browser acceptance passes.
+- Next: install the staged `0.2.1` assets in an isolated Windows environment and perform real Host, extension, Companion, and ChatGPT/Codex supervision acceptance.
