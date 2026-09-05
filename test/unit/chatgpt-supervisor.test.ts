@@ -127,6 +127,12 @@ describe("ChatGPTSupervisorAdapter", () => {
 
     expect(review).toMatchObject({ taskId: "task_1", runId: "run_1", decision: "PASS" });
     expect(transport.sent[0]?.context.leaseEpoch).toBe(14);
+    expect(JSON.parse(transport.sent[0]!.message.content)).toMatchObject({
+      replyContract: {
+        format: "JSON object only; no prose or Markdown",
+        requiredFields: { inReplyTo: "msg_request", kind: "REVIEW" },
+      },
+    });
     expect((await ledger.get("msg_request"))?.state).toBe("CONSUMED");
   });
 

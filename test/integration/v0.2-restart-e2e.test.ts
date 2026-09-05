@@ -48,6 +48,21 @@ describe("V0.2 restart reconciliation", () => {
     };
     const content = JSON.stringify({
       ...envelope,
+      replyContract: {
+        format: "JSON object only; no prose or Markdown",
+        requiredFields: {
+          protocolVersion: "ASR/1",
+          messageId: "new unique message id",
+          inReplyTo: envelope.messageId,
+          bindingId: envelope.bindingId,
+          taskId: envelope.taskId,
+          runId: envelope.runId,
+          kind: "REVIEW",
+          decision: ["PASS", "REVISE", "ASK_USER"],
+          findings: "array of strings",
+        },
+        instruction: "Evaluate payload against acceptanceCriteria and return exactly one correlated ASR/1 REVIEW object.",
+      },
       payload: compileReviewPacket(task, result, {
         bindingId: binding.bindingId,
         taskId: task.taskId,

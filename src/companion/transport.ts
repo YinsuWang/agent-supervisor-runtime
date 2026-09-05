@@ -32,6 +32,8 @@ export type BackgroundWebTransportOptions = {
   id?: string;
   priority?: number;
   leaseTtlMs?: number;
+  pageReadyTimeoutMs?: number;
+  submitObservationTimeoutMs?: number;
   responseTimeoutMs?: number;
   pollIntervalMs?: number;
   launchContext?: (profileDir: string) => Promise<CompanionBrowserContext>;
@@ -57,6 +59,8 @@ export class BackgroundWebTransport implements ConversationTransport {
   readonly #profileDir: string;
   readonly #manager: TransportManager;
   readonly #leaseTtlMs: number;
+  readonly #pageReadyTimeoutMs: number;
+  readonly #submitObservationTimeoutMs: number;
   readonly #responseTimeoutMs: number;
   readonly #pollIntervalMs: number;
   readonly #launchContext: (profileDir: string) => Promise<CompanionBrowserContext>;
@@ -72,11 +76,16 @@ export class BackgroundWebTransport implements ConversationTransport {
     this.#profileDir = assertCompanionProfileDirectory(options.profileDir);
     this.#manager = options.manager;
     this.#leaseTtlMs = options.leaseTtlMs ?? 15_000;
+    this.#pageReadyTimeoutMs = options.pageReadyTimeoutMs ?? 30_000;
+    this.#submitObservationTimeoutMs = options.submitObservationTimeoutMs ?? 30_000;
     this.#responseTimeoutMs = options.responseTimeoutMs ?? 120_000;
     this.#pollIntervalMs = options.pollIntervalMs ?? 100;
     this.#launchContext = options.launchContext ?? launchPersistentCompanionContext;
     this.#createPageDriver = options.createPageDriver ?? ((page, expected) =>
-      new PlaywrightChatGptPageDriver(page as Page, { expectedConversationId: expected }));
+      new PlaywrightChatGptPageDriver(page as Page, {
+        expectedConversationId: expected,
+        submitObservationTimeoutMs: this.#submitObservationTimeoutMs,
+      }));
     this.#manager.register(this, options.priority ?? 10);
   }
 
@@ -96,7 +105,7 @@ export class BackgroundWebTransport implements ConversationTransport {
       await page.goto(binding.conversationUrl);
       this.#driver = this.#createPageDriver(page, binding.conversationId);
     }
-    await this.assertPageReady();
+    await this.waitForPageReady();
     if (this.#manager.status(this.id) === "DRAINING") {
       this.#detail = "Draining the current exchange before handback";
       return;
@@ -193,6 +202,23 @@ export class BackgroundWebTransport implements ConversationTransport {
     const code: CompanionTransportErrorCode = authRequired ? "AUTH_REQUIRED" : "INCOMPATIBLE";
     this.#detail = code;
     throw new CompanionTransportError(code, `Background companion page is ${code}`);
+  }
+
+  private async waitForPageReady(): Promise<void> {
+    const deadline = Date.now() + this.#pageReadyTimeoutMs;
+    let lastError: CompanionTransportError | undefined;
+    while (Date.now() <= deadline) {
+      try {
+        await this.assertPageReady();
+        return;
+      } catch (error) {
+        if (!(error instanceof CompanionTransportError)) throw error;
+        if (error.code === "AUTH_REQUIRED") throw error;
+        lastError = error;
+      }
+      await delay(Math.min(this.#pollIntervalMs || 50, Math.max(1, deadline - Date.now())));
+    }
+    throw lastError ?? new CompanionTransportError("INCOMPATIBLE", "Background companion page did not become ready");
   }
 
   private assertBinding(bindingId: string): void {

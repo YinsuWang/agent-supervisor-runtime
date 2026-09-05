@@ -79,7 +79,25 @@ export class ChatGPTSupervisorAdapter implements SupervisorAdapter {
       kind: "REVIEW_REQUEST",
       sequence: existing?.sequence ?? await this.nextSequence(),
     });
-    const content = JSON.stringify({ ...envelope, payload: compileReviewPacket(input.task, input.result, manifest) });
+    const content = JSON.stringify({
+      ...envelope,
+      replyContract: {
+        format: "JSON object only; no prose or Markdown",
+        requiredFields: {
+          protocolVersion: "ASR/1",
+          messageId: "new unique message id",
+          inReplyTo: envelope.messageId,
+          bindingId: envelope.bindingId,
+          taskId: envelope.taskId,
+          runId: envelope.runId,
+          kind: "REVIEW",
+          decision: ["PASS", "REVISE", "ASK_USER"],
+          findings: "array of strings",
+        },
+        instruction: "Evaluate payload against acceptanceCriteria and return exactly one correlated ASR/1 REVIEW object.",
+      },
+      payload: compileReviewPacket(input.task, input.result, manifest),
+    });
 
     if (!existing) {
       await this.#ledger.append({

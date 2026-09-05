@@ -115,6 +115,24 @@ describe("Background Web Companion", () => {
 
     await expect(background.health()).resolves.toEqual({ status: "OFFLINE", detail: "AUTH_REQUIRED" });
   });
+
+  it("waits for semantic page readiness after navigation", async () => {
+    const manager = new TransportManager(new TransportLeaseCoordinator(new InMemoryTransportLeaseStore()));
+    const driver = new FakePageDriver();
+    driver.incompatibleHealthChecks = 2;
+    const background = new BackgroundWebTransport({
+      profileDir: resolve("C:/dedicated/asr-companion-delayed-profile"),
+      manager,
+      launchContext: async () => new FakeBrowserContext(),
+      createPageDriver: () => driver,
+      pollIntervalMs: 1,
+      pageReadyTimeoutMs: 1_000,
+    });
+
+    await expect(background.connect(binding)).resolves.toBeUndefined();
+    expect(driver.healthChecks).toBeGreaterThan(2);
+    expect((await background.health()).status).toBe("ACTIVE");
+  });
 });
 
 const binding: ConversationBinding = {
@@ -130,6 +148,8 @@ class FakePageDriver implements ChatGptPageDriver {
   readonly messages: PageMessage[] = [];
   readonly submitted: string[] = [];
   compatible = true;
+  healthChecks = 0;
+  incompatibleHealthChecks = 0;
   async inspectConversation(): Promise<PageConversationIdentity> {
     return { conversationId: binding.conversationId, conversationUrl: binding.conversationUrl };
   }
@@ -142,6 +162,8 @@ class FakePageDriver implements ChatGptPageDriver {
   }
   async detectGenerationState(): Promise<GenerationState> { return "IDLE"; }
   async health(): Promise<PageCompatibility> {
+    this.healthChecks += 1;
+    if (this.incompatibleHealthChecks > 0) this.compatible = this.healthChecks > this.incompatibleHealthChecks;
     return this.compatible
       ? { status: "COMPATIBLE", missing: [], conversationIdentity: true, composer: true, submit: true, assistantMessages: true, generationLifecycle: true }
       : { status: "INCOMPATIBLE", missing: ["conversationIdentity", "composer"], conversationIdentity: false, composer: false, submit: false, assistantMessages: false, generationLifecycle: false };

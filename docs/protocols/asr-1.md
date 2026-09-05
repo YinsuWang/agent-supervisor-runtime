@@ -33,6 +33,8 @@ Required invariants:
 - `REVIEW`: returns `PASS`, `REVISE`, or `ASK_USER`, findings, and an instruction when required.
 - `PLAN_REQUEST`, `PLAN`, and `NOTIFICATION` are reserved envelope kinds.
 
+`REVIEW_REQUEST` includes a compact `replyContract` alongside its payload. A supervisor must return exactly one JSON object matching that contract; free-form prose is not a valid machine response. The reply must copy `bindingId`, `taskId`, and `runId`, set `kind` to `REVIEW`, and set `inReplyTo` to the request `messageId`.
+
 ## Durable delivery states
 
 ```text

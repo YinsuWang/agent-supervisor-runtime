@@ -38,6 +38,7 @@ export async function runProcess(spec: ProcessSpec, signal?: AbortSignal): Promi
       cwd: spec.cwd,
       env: spec.env ?? process.env,
       shell: spec.shell ?? false,
+      stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true
     });
 
