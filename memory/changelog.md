@@ -140,3 +140,12 @@
 - Verification: local typecheck, build, package clean-install demo, and Host self-test passed; CI run `33941628421` passed on Ubuntu and Windows.
 - Decision: `v0.2.0` remains unchanged; `v0.2.1` is not tagged or published until the fresh Windows/browser acceptance passes.
 - Next: install the staged `0.2.1` assets in an isolated Windows environment and perform real Host, extension, Companion, and ChatGPT/Codex supervision acceptance.
+
+## 2026-09-05 — v0.2.1 真实验收与发布完成
+
+- Goal: complete the real Windows/Chrome/ChatGPT acceptance and publish the repaired release.
+- Changes: fixed delayed Companion page readiness, extended semantic user-message observation to 30 seconds, closed worker stdin on spawned Codex processes, and added a self-describing ASR/1 review reply contract plus protocol documentation.
+- Verification: full local suite passed (44 files, 128 tests); typecheck, build, installed npm demo, and Native Messaging Host self-test passed; CI run `33951919767` passed on Ubuntu and Windows.
+- Real acceptance: `ACCEPTANCE-022` completed with a read-only worker, `ACCEPTANCE_WORKER_OK`, correlated ASR/1 `PASS`, consumed request/reply ledger entries, zero retries, and zero revisions. The first attempt exposed the delayed submission/prose-response issue; it was not used as the release gate.
+- Release: committed and pushed `f895c33`; created tag `v0.2.1`; published https://github.com/YinsuWang/agent-supervisor-runtime/releases/tag/v0.2.1 with the npm tarball and Windows x64 Host. Remote asset digests match the locally staged files.
+- Remaining: generated local release staging directories are untracked; no credentials or tokens were stored in project memory.

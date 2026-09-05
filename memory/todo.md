@@ -4,7 +4,7 @@
 
 - [x] Run `npm install`.
 - [x] Run `npm run typecheck`.
-- [x] Run `npm test -- --run` (44 files, 123 tests).
+- [x] Run `npm test -- --run` (44 files, 128 tests).
 - [x] Run `npm run build`.
 - [x] Audit and correct Task 12 probe behavior against all seven gate criteria.
 - [x] Run `npm run test:chatgpt-spike` with the dedicated profile.
@@ -30,7 +30,7 @@
 - [x] Wire the documented CLI run/resume path to the real ChatGPT conversation supervisor through the background-web transport.
 - [x] Ensure doctor probes cannot satisfy or overwrite Chrome extension handshake evidence.
 - [x] Provide and verify self-contained release installation instructions and runnable demo fixtures.
-- [ ] Repeat full fresh-Windows acceptance with actual Host registration, extension binding, and manual real ChatGPT supervision after fixes.
+- [x] Repeat full fresh-Windows acceptance with actual Host registration, extension binding, and manual real ChatGPT supervision after fixes (`ACCEPTANCE-022`, final state `COMPLETED`).
 
 ## Gate decision
 
