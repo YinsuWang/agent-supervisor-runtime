@@ -2,7 +2,7 @@
 
 Updated: 2026-09-05 (Asia/Shanghai)
 
-- Local branch `main` is at `8486553`; the code fix commit is `f895c33`, CI run `33951919767` passed on Ubuntu and Windows, and the memory-only follow-up CI runs `33952168922` and `33952252728` also passed.
+- The code fix commit `f895c33` is pushed to `main`; CI runs `33951919767`, `33952168922`, `33952252728`, and `33952344240` passed on Ubuntu and Windows.
 - `v0.2.1` is tagged and published at https://github.com/YinsuWang/agent-supervisor-runtime/releases/tag/v0.2.1.
 - The real CLI path uses an explicit `supervisor.adapter=chatgpt` binding with the `background-web` transport. `buildRuntime` constructs the real ChatGPT supervisor, persistent Companion transport, file-backed lease coordinator, message ledger, and read-only Context Broker; `run`/`resume` close the Companion on exit.
 - Doctor probes distinguish `clientKind=doctor` from the real extension handshake. npm packaging includes `examples` and `docs`.
