@@ -23,7 +23,13 @@ try {
   if (!packResult?.filename || !Array.isArray(packResult.files)) throw new Error("npm pack returned no package metadata");
 
   const paths = packResult.files.map((entry) => entry.path);
-  const required = ["dist/cli/index.js", "extension/dist/service-worker.js", "extension/manifest.json"];
+  const required = [
+    "dist/cli/index.js",
+    "extension/dist/service-worker.js",
+    "extension/manifest.json",
+    "examples/mock-review-loop/orchestrator.config.json",
+    "docs/setup/windows-v0.2.md",
+  ];
   for (const requiredPath of required) {
     if (!paths.includes(requiredPath)) throw new Error(`Packed npm package is missing ${requiredPath}`);
   }
@@ -36,7 +42,17 @@ try {
   const { stdout: versionOutput } = await execFileAsync(process.execPath, [installedCli, "--version"], { cwd: installDirectory });
   const packageJson = JSON.parse(await readFile(resolve(root, "package.json"), "utf8"));
   if (versionOutput.trim() !== packageJson.version) throw new Error(`Installed CLI version mismatch: ${versionOutput.trim()}`);
-  console.log(JSON.stringify({ package: packResult.id, size: packResult.size, unpackedSize: packResult.unpackedSize, installedCli: versionOutput.trim() }));
+  const installedPackageRoot = dirname(dirname(dirname(installedCli)));
+  const demoConfig = join(installedPackageRoot, "examples", "mock-review-loop", "orchestrator.config.json");
+  const demoTask = join(installedPackageRoot, "examples", "mock-review-loop", "task.json");
+  const { stdout: demoOutput } = await execFileAsync(
+    process.execPath,
+    [installedCli, "--config", demoConfig, "run", demoTask],
+    { cwd: installedPackageRoot, maxBuffer: 1024 * 1024 },
+  );
+  const demoRecord = JSON.parse(demoOutput);
+  if (demoRecord.state !== "COMPLETED") throw new Error(`Installed package demo did not complete: ${demoRecord.state}`);
+  console.log(JSON.stringify({ package: packResult.id, size: packResult.size, unpackedSize: packResult.unpackedSize, installedCli: versionOutput.trim(), demoState: demoRecord.state }));
 } finally {
   await rm(tempRoot, { recursive: true, force: true });
 }

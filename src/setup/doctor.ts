@@ -102,6 +102,14 @@ function defaultDoctorProbes(options: SupervisorDoctorOptions): SupervisorDoctor
       const parsed = ExtensionSessionObservationSchema.safeParse(raw);
       if (!parsed.success) return { ok: false, detail: `PROTOCOL_INCOMPATIBLE: ${parsed.error.message}` };
       const observation = parsed.data;
+      if (observation.extensionInstanceId === "doctor" || observation.capabilities.includes("doctor")) {
+        return { ok: false, detail: "last handshake was produced by the doctor probe, not Chrome" };
+      }
+      const requiredCapabilities = ["conversation-observe", "conversation-send", "binding-ui"];
+      const missingCapabilities = requiredCapabilities.filter((capability) => !observation.capabilities.includes(capability));
+      if (missingCapabilities.length > 0) {
+        return { ok: false, detail: `extension handshake is missing capabilities: ${missingCapabilities.join(", ")}` };
+      }
       return {
         ok: true,
         detail: `${observation.protocol} observed from extension ${observation.extensionVersion}`,
@@ -144,7 +152,7 @@ async function probeRuntimeIpc(runtimeHome: string): Promise<DoctorProbeOutput> 
         frameId: `doctor_${randomUUID()}`,
         type: "HELLO",
         timestamp: new Date().toISOString(),
-        payload: { extensionInstanceId: "doctor", extensionVersion: ASR_VERSION, capabilities: ["doctor"] },
+        payload: { extensionInstanceId: "doctor", extensionVersion: ASR_VERSION, capabilities: ["doctor"], clientKind: "doctor" },
       });
     }, reject);
   });

@@ -26,7 +26,11 @@
 
 ## Post-release
 
-- No open implementation or release-readiness tasks.
+- [x] Attempt isolated Windows acceptance using actual v0.2.0 Release assets (partial pass; see docs/acceptance/2026-09-05-v0.2.0-windows-release.md).
+- [x] Wire the documented CLI run/resume path to the real ChatGPT conversation supervisor through the background-web transport.
+- [x] Ensure doctor probes cannot satisfy or overwrite Chrome extension handshake evidence.
+- [x] Provide and verify self-contained release installation instructions and runnable demo fixtures.
+- [ ] Repeat full fresh-Windows acceptance with actual Host registration, extension binding, and manual real ChatGPT supervision after fixes.
 
 ## Gate decision
 

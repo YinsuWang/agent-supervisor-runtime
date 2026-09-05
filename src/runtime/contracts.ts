@@ -25,6 +25,7 @@ export const HelloPayloadSchema = z.object({
   extensionInstanceId: z.string().min(1),
   extensionVersion: z.string().min(1),
   capabilities: z.array(z.string().min(1)).default([]),
+  clientKind: z.enum(["extension", "doctor"]).default("extension"),
 });
 
 export const WelcomePayloadSchema = z.object({

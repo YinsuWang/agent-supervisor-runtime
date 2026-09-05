@@ -30,15 +30,35 @@ orchestrator setup `
 Then:
 
 1. Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select the repository's `extension` directory.
-2. Open the exact ChatGPT conversation that will supervise the workspace.
-3. Open the extension popup and bind that conversation. ASR never infers a target conversation.
-4. If background supervision is needed, run `orchestrator companion login`, finish login in the dedicated ordinary Chrome window, and close it.
-5. Run `orchestrator doctor`. Each failed layer is reported separately.
-6. Run `orchestrator run path\to\task.json`; use `orchestrator resume TASK-ID` after an interrupted local process.
+2. For the CLI ChatGPT path, run `orchestrator companion login`, finish login in the dedicated ordinary Chrome window, and close it.
+3. Edit `orchestrator.config.json` so `supervisor.adapter` is `chatgpt`, then fill in the exact conversation binding shown below. ASR never infers a target conversation.
+4. Run `orchestrator doctor`. Each failed layer is reported separately.
+5. Run `orchestrator run path\to\task.json`; use `orchestrator resume TASK-ID` after an interrupted local process.
+
+The release CLI currently uses the `background-web` transport for ChatGPT supervision. The extension remains the narrow Chrome binding and Native Messaging integration surface; its browser handshake is diagnosed independently and is not silently used as a mock supervisor.
+
+Replace the default mock supervisor block with an explicit binding:
+
+```json
+{
+  "supervisor": {
+    "adapter": "chatgpt",
+    "transport": "background-web",
+    "binding": {
+      "bindingId": "bind_my_workspace",
+      "workspaceId": "my-workspace",
+      "conversationId": "<conversation-id>",
+      "conversationUrl": "https://chatgpt.com/c/<conversation-id>",
+      "preferredTransport": "background-web",
+      "createdAt": "2026-09-05T00:00:00.000Z"
+    }
+  }
+}
+```
 
 See [Windows V0.2 setup](docs/setup/windows-v0.2.md) for installation, validation, and removal details.
 
-The npm package intentionally excludes the large Windows Native Messaging Host executable. For a release install, download the matching `agent-supervisor-runtime-host-v<version>-win-x64.exe` from the GitHub Release and pass its path to `orchestrator setup`. A source checkout can continue to use the executable produced by `npm run build`.
+The npm package includes the CLI, extension, documentation, and deterministic examples, but intentionally excludes the large Windows Native Messaging Host executable. For a release install, download the matching `agent-supervisor-runtime-host-v<version>-win-x64.exe` from the GitHub Release and pass its path to `orchestrator setup`. A source checkout can continue to use the executable produced by `npm run build`.
 
 ## Runtime behavior
 
@@ -95,6 +115,8 @@ node dist/cli/index.js --config examples/mock-review-loop/orchestrator.config.js
 ```
 
 Expected final state: `COMPLETED` after one automatic revision.
+
+The same `examples/mock-review-loop` and `docs` paths are included in the npm package, so an installed release can run the demo from the package directory without copying source fixtures.
 
 ## License
 

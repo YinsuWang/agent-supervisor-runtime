@@ -70,6 +70,16 @@ describe("native host runtime bridge", () => {
       expect(JSON.parse(await readFile(join(runtimeHome, "health", "extension-session.json"), "utf8")))
         .toMatchObject({ protocol: "ASR-NM/1", extensionVersion: ASR_VERSION, runtimeInstanceId: "runtime_test" });
 
+      input.write(encodeNativeMessage(frame("frame_doctor", "HELLO", {
+        extensionInstanceId: "doctor",
+        extensionVersion: ASR_VERSION,
+        capabilities: ["doctor"],
+        clientKind: "doctor",
+      })));
+      await waitForWelcomeCount(observed, 2);
+      expect(JSON.parse(await readFile(join(runtimeHome, "health", "extension-session.json"), "utf8")))
+        .toMatchObject({ extensionInstanceId: "extinst_test", extensionVersion: ASR_VERSION });
+
       input.write(encodeNativeMessage(frame("frame_command", "COMMAND", {
         name: "BIND_CONVERSATION",
         conversationId: "conversation-1",
@@ -86,3 +96,11 @@ describe("native host runtime bridge", () => {
     }
   });
 });
+
+async function waitForWelcomeCount(observed: RuntimeFrame[], expected: number): Promise<void> {
+  const deadline = Date.now() + 1_000;
+  while (observed.filter((item) => item.type === "WELCOME").length < expected) {
+    if (Date.now() >= deadline) throw new Error(`Timed out waiting for ${expected} WELCOME frames`);
+    await new Promise<void>((resolve) => setTimeout(resolve, 5));
+  }
+}

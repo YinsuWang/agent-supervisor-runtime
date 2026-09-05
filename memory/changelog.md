@@ -115,3 +115,20 @@
 - Created and pushed annotated tag `v0.2.0` and published the GitHub Release: https://github.com/YinsuWang/agent-supervisor-runtime/releases/tag/v0.2.0.
 - Published npm tarball `agent-supervisor-runtime-0.2.0.tgz` (127,468 bytes) and Windows x64 host `agent-supervisor-runtime-host-v0.2.0-win-x64.exe` (92,547,072 bytes). GitHub asset digests match local SHA256 values: `886607AD5769B595C6ED8C3D2D62E0089C3C60A9DF91D9278BF5E83F36C3EFE2` and `57E1F71F7EFF1E4F1E10C32EAE4F9FBC75DBE83DCCD333C1CCA669824603CA2B`.
 - Final status: Task 1–17 and Task 17 Desktop follow-up are complete; no open todo remains. Continue with post-release monitoring on `main`.
+
+## 2026-09-05 — Windows release-package acceptance
+
+- Goal: attempt installation and usage acceptance from actual v0.2.0 assets in isolated directories.
+- Changes: added docs/acceptance/2026-09-05-v0.2.0-windows-release.md; updated current state and post-release todo. No implementation changes.
+- Verification: independently matched both asset hashes; repeated installed CLI version and Host self-test; reviewed persisted mock task COMPLETED (one revision, two runs) and doctor-generated extension-session evidence; no matching temporary Node/Host processes remained.
+- Decision: partial pass only; package smoke does not establish real CLI ChatGPT supervision readiness. Prior no-open-tasks status is superseded by the acceptance findings.
+- Remaining: CLI only supports mock supervision, doctor can mistake its own HELLO for an extension handshake, release package lacks README demo fixtures and complete release-install instructions. Actual clean-OS/browser integration remains untested.
+- Next: address these gaps, then repeat full installation and manual real-conversation acceptance. No credentials stored, commits or publication performed.
+
+## 2026-09-05 — CLI/ChatGPT connection follow-up
+
+- Goal: repair the documented CLI path so it can construct the real ChatGPT supervisor and make the doctor/package findings actionable.
+- Changes: added explicit `chatgpt`/`background-web` configuration and conversation identity validation; wired `buildRuntime`, `run`, and `resume` to `ChatGPTSupervisorAdapter` plus persistent Companion resources; added runtime lease/ledger/context setup and cleanup; separated doctor HELLOs from extension handshake evidence; included examples and docs in npm packaging.
+- Verification: focused config/CLI/native-host/doctor tests passed; full suite passed with 44 files and 126 tests; typecheck, build, clean npm package installation, installed package's COMPLETED mock demo, and native-host self-test passed.
+- Decision: local source and package workflow is repaired for the background-web transport, but the published v0.2.0 assets were not changed or republished.
+- Remaining: perform fresh Windows Host registration, extension binding, Companion login, and a manual real ChatGPT/Codex end-to-end task.

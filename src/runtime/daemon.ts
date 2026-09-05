@@ -43,15 +43,17 @@ export class RuntimeDaemon {
         if (frame.type === "HELLO") {
           const hello = validateHello(frame);
           const sessionId = `session_${randomUUID()}`;
-          await writeJsonAtomic(join(this.options.runtimeHome, "health", "extension-session.json"), {
-            protocol: frame.protocol,
-            extensionInstanceId: hello.extensionInstanceId,
-            extensionVersion: hello.extensionVersion,
-            capabilities: hello.capabilities,
-            runtimeInstanceId: this.runtimeInstanceId,
-            sessionId,
-            observedAt: new Date().toISOString(),
-          });
+          if (hello.clientKind === "extension") {
+            await writeJsonAtomic(join(this.options.runtimeHome, "health", "extension-session.json"), {
+              protocol: frame.protocol,
+              extensionInstanceId: hello.extensionInstanceId,
+              extensionVersion: hello.extensionVersion,
+              capabilities: hello.capabilities,
+              runtimeInstanceId: this.runtimeInstanceId,
+              sessionId,
+              observedAt: new Date().toISOString(),
+            });
+          }
           await connection.send({
             protocol: RuntimeProtocolVersion,
             frameId: `frame_${randomUUID()}`,

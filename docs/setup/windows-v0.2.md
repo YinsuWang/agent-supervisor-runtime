@@ -70,6 +70,27 @@ The manifest permits exactly one `chrome-extension://.../` origin. Wildcards are
 
 Binding records an explicit conversation identity. A page that changes to another conversation fails closed before sending.
 
+The CLI's ChatGPT supervisor path is configured explicitly in `orchestrator.config.json` and currently uses the background companion transport. Use the same conversation identity as the page you intend to supervise:
+
+```json
+{
+  "supervisor": {
+    "adapter": "chatgpt",
+    "transport": "background-web",
+    "binding": {
+      "bindingId": "bind_my_workspace",
+      "workspaceId": "my-workspace",
+      "conversationId": "<conversation-id>",
+      "conversationUrl": "https://chatgpt.com/c/<conversation-id>",
+      "preferredTransport": "background-web",
+      "createdAt": "2026-09-05T00:00:00.000Z"
+    }
+  }
+}
+```
+
+The URL and ID must match exactly. The CLI will fail closed if the dedicated companion page is logged out, incompatible, or on another conversation.
+
 ## Prepare the background companion
 
 ```powershell

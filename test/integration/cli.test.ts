@@ -2,8 +2,10 @@ import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { buildRuntime } from "../../src/adapters/registry.js";
 import { initCommand } from "../../src/cli/commands/init.js";
 import { statusCommand } from "../../src/cli/commands/status.js";
+import { loadConfig } from "../../src/config/loader.js";
 import { FileStateStore } from "../../src/stores/file/store.js";
 
 describe("CLI commands", () => {
@@ -27,5 +29,34 @@ describe("CLI commands", () => {
     await store.saveRecord({ taskId: "TASK-1", projectId: "demo", state: "BLOCKED", revisionCount: 1, retryCount: 0, updatedAt: new Date().toISOString() });
     const record = await statusCommand("TASK-1", join(dir, "orchestrator.config.json"));
     expect(record.state).toBe("BLOCKED");
+  });
+
+  it("builds the ChatGPT supervisor from CLI configuration instead of silently using mock", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "asr-cli-chatgpt-"));
+    const configPath = join(dir, "orchestrator.config.json");
+    await writeFile(configPath, `${JSON.stringify({
+      version: 1,
+      worker: { adapter: "codex-exec", command: "codex", defaultTimeoutMinutes: 1 },
+      supervisor: {
+        adapter: "chatgpt",
+        runtimeHome: join(dir, "runtime"),
+        binding: {
+          bindingId: "bind_cli",
+          workspaceId: "workspace_cli",
+          conversationId: "conversation_cli",
+          conversationUrl: "https://chatgpt.com/c/conversation_cli",
+          preferredTransport: "background-web",
+          createdAt: "2026-09-05T00:00:00.000Z",
+        },
+      },
+      policy: { maxRevisions: 3, maxWorkerRetries: 2, maxWallClockMinutes: 5 },
+      state: { adapter: "file", directory: ".state" },
+    }, null, 2)}\n`, "utf8");
+
+    const config = await loadConfig(configPath);
+    const runtime = await buildRuntime(config, configPath);
+    expect(runtime.supervisor.name).toBe("chatgpt");
+    expect("transport" in runtime).toBe(true);
+    await runtime.close();
   });
 });

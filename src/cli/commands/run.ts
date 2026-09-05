@@ -5,9 +5,13 @@ import { buildRuntime } from "../../adapters/registry.js";
 
 export async function runCommand(taskPath: string, configPath = "orchestrator.config.json") {
   const config = await loadConfig(configPath);
-  const { orchestrator } = await buildRuntime(config, configPath);
-  const task = JSON.parse(await readFile(resolve(taskPath), "utf8")) as unknown;
-  const record = await orchestrator.run(task);
-  console.log(JSON.stringify(record, null, 2));
-  return record;
+  const runtime = await buildRuntime(config, configPath);
+  try {
+    const task = JSON.parse(await readFile(resolve(taskPath), "utf8")) as unknown;
+    const record = await runtime.orchestrator.run(task);
+    console.log(JSON.stringify(record, null, 2));
+    return record;
+  } finally {
+    await runtime.close();
+  }
 }

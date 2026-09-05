@@ -12,6 +12,8 @@
     "extension/dist",
     "extension/manifest.json",
     "extension/popup.html",
+    "examples",
+    "docs",
     "README.md",
     "LICENSE"
   ],
